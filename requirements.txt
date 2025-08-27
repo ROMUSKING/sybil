@@ -2,3 +2,4 @@ PyYAML
 anthropic
 google-generativeai
 cohere
+mistralai

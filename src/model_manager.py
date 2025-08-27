@@ -1,4 +1,4 @@
-from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper, CohereWrapper
+from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper, CohereWrapper, MistralWrapper
 from src.usage import UsageTracker
 from datetime import datetime, timedelta
 
@@ -20,6 +20,12 @@ class ModelManager:
             elif provider_name == "cohere":
                 if provider_config.get("api_key") != "YOUR_COHERE_API_KEY":
                     self.wrappers[provider_name] = CohereWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
+            elif provider_name == "mistral":
+                if provider_config.get("api_key") != "YOUR_MISTRAL_API_KEY":
+                    self.wrappers[provider_name] = MistralWrapper(
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
@@ -75,6 +81,8 @@ class ModelManager:
                 total_requests += len(model_usage.get("requests", []))
 
             return total_requests < limit
+        elif provider_name == "mistral":
+            return True
         elif provider_name == "google":
             provider_config = self.config["providers"]["google"]
             limit = provider_config["free_tier_requests_per_minute"]

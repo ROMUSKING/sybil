@@ -87,12 +87,12 @@ This section tracks the project's tasks and their status.
 -   [x] **Project Documentation**: Created this `AGENTS.md` file to guide development.
 -   [x] **ReAct Implementation**: Refactored the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop and connected it to a tool registry.
 -   [x] **Short-Term Memory**: Implemented a history truncation mechanism in `ManagerAgent` to manage context window size.
+-   [x] **Test-Driven Development**: Added a `run_tests` tool and updated the agent's prompt to support a TDD workflow.
 
 ### Next Tasks
 
 #### Phase 2: Advanced Patterns
 -   [ ] **Code-then-CoT**: Update the agent's prompting to generate code first, then an explanation.
--   [ ] **Test-Driven Development**: Add the ability for the agent to write and execute unit tests to verify its own code.
 -   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.
 
 #### Provider Integrations

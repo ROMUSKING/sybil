@@ -10,6 +10,7 @@ class ToolRegistry:
         self.register_tool("read_file", read_file)
         self.register_tool("write_file", write_file)
         self.register_tool("shell_execute", shell_execute)
+        self.register_tool("run_tests", run_tests)
 
     def register_tool(self, name, function):
         self._tools[name] = function
@@ -51,6 +52,21 @@ def shell_execute(command: str) -> str:
             return f"Error executing command: {result.stderr}"
     except Exception as e:
         return f"Error executing command: {e}"
+
+def run_tests(test_path: str = "") -> str:
+    """Runs the pytest test suite. Can optionally run on a specific file or directory."""
+    print(f"--- TOOL: Running tests on path: '{test_path or 'all'}' ---")
+    command = ["python3", "-m", "pytest", test_path]
+    try:
+        # Using shell=False and a list of args is safer
+        result = subprocess.run(command, capture_output=True, text=True, check=False)
+        # Combine stdout and stderr to give the agent full context
+        output = f"--- pytest STDOUT ---\n{result.stdout}\n"
+        if result.stderr:
+            output += f"--- pytest STDERR ---\n{result.stderr}\n"
+        return output
+    except Exception as e:
+        return f"Error running pytest: {e}"
 
 # Create a global instance for easy access
 tool_registry = ToolRegistry()

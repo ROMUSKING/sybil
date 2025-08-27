@@ -76,14 +76,24 @@ This section tracks the project's tasks and their status.
     -   [x] Implemented API wrapper for Google Gemini.
     -   [x] Implemented API wrapper for Cohere.
     -   [x] Implemented API wrapper for Mistral AI.
+    -   [x] Implemented API wrapper for DeepSeek.
 -   [x] **Quota Management**: Implemented the `ModelManager` to handle model switching based on different quota types (cost-based, RPM, monthly calls).
 -   [x] **Usage Persistence**: Implemented `UsageTracker` to persist usage data across sessions.
 -   [x] **Basic Agent Framework**: Created a base `Agent` class and a `ManagerAgent`.
 -   [x] **CLI**: Built a simple command-line interface for user interaction.
 -   [x] **Project Documentation**: Created this `AGENTS.md` file to guide development.
 
-### Next Tasks (Phase 2)
+### Next Tasks
+
+#### Phase 2: Advanced Patterns
 -   [ ] **Implement ReAct Loop**: Refactor the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop.
 -   [ ] **Integrate Tools**: Connect the ReAct loop to the existing tool-use infrastructure (e.g., `read_file`, `write_file`).
 -   [ ] **Code-then-CoT**: Update the agent's prompting to generate code first, then an explanation.
 -   [ ] **Test-Driven Development**: Add the ability for the agent to write and execute unit tests to verify its own code.
+-   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.
+
+#### Provider Integrations
+-   [ ] Add wrapper for OpenAI (gpt-5).
+-   [ ] Add wrapper for Qwen.
+-   [ ] Research and add hosted provider for Llama.
+-   [ ] Research and add wrapper for Grok.

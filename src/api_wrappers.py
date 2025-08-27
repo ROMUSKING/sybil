@@ -15,7 +15,7 @@ class APIWrapper:
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
 
-    def send_request(self, prompt):
+    def send_request(self, prompt, model):
         raise NotImplementedError
 
 class AnthropicWrapper(APIWrapper):
@@ -24,8 +24,7 @@ class AnthropicWrapper(APIWrapper):
         self.client = anthropic.Anthropic(api_key=self.api_key)
         self.provider_name = "anthropic"
 
-    def send_request(self, prompt):
-        model="claude-3-5-sonnet-20240620"
+    def send_request(self, prompt, model):
         retries = 0
         while retries < self.max_retries:
             try:
@@ -37,14 +36,12 @@ class AnthropicWrapper(APIWrapper):
                     ],
                 )
 
-                # Record usage
                 input_tokens = message.usage.input_tokens
                 output_tokens = message.usage.output_tokens
                 self.usage_tracker.record_usage(
                     self.provider_name, model, input_tokens, output_tokens
                 )
 
-                # Return only the text content
                 if message.content and isinstance(message.content, list) and len(message.content) > 0:
                     return message.content[0].text
                 return ""
@@ -62,6 +59,74 @@ class AnthropicWrapper(APIWrapper):
 
         return "API request failed after multiple retries."
 
+class QwenWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = openai.OpenAI(
+            api_key=self.api_key,
+            base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+        )
+        self.provider_name = "qwen"
+
+    def send_request(self, prompt, model):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+                self.usage_tracker.record_usage(
+                    self.provider_name, model, input_tokens, output_tokens
+                )
+
+                return response.choices[0].message.content
+            except Exception as e:
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
+
+        return "API request failed after multiple retries."
+
+class OpenAIWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = openai.OpenAI(api_key=self.api_key)
+        self.provider_name = "openai"
+
+    def send_request(self, prompt, model):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+                self.usage_tracker.record_usage(
+                    self.provider_name, model, input_tokens, output_tokens
+                )
+
+                return response.choices[0].message.content
+            except Exception as e:
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
+
+        return "API request failed after multiple retries."
 
 class DeepSeekWrapper(APIWrapper):
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -72,25 +137,23 @@ class DeepSeekWrapper(APIWrapper):
         )
         self.provider_name = "deepseek"
 
-    def send_request(self, prompt):
+    def send_request(self, prompt, model):
         retries = 0
         while retries < self.max_retries:
             try:
                 response = self.client.chat.completions.create(
-                    model="deepseek-chat",
+                    model=model,
                     messages=[{"role": "user", "content": prompt}]
                 )
 
-                # Record usage
                 input_tokens = response.usage.prompt_tokens
                 output_tokens = response.usage.completion_tokens
-
                 self.usage_tracker.record_usage(
-                    self.provider_name, "deepseek-chat", input_tokens, output_tokens
+                    self.provider_name, model, input_tokens, output_tokens
                 )
 
                 return response.choices[0].message.content
-            except Exception as e: # Broad exception for now
+            except Exception as e:
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
@@ -100,7 +163,6 @@ class DeepSeekWrapper(APIWrapper):
                 time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
-
 
 class MistralWrapper(APIWrapper):
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -108,27 +170,25 @@ class MistralWrapper(APIWrapper):
         self.client = Mistral(api_key=self.api_key)
         self.provider_name = "mistral"
 
-    def send_request(self, prompt):
+    def send_request(self, prompt, model):
         retries = 0
         while retries < self.max_retries:
             try:
                 messages = [UserMessage(content=prompt)]
 
                 response = self.client.chat.complete(
-                    model="mistral-large-latest",
+                    model=model,
                     messages=messages
                 )
 
-                # Record usage
                 input_tokens = response.usage.prompt_tokens
                 output_tokens = response.usage.completion_tokens
-
                 self.usage_tracker.record_usage(
-                    self.provider_name, "mistral-large-latest", input_tokens, output_tokens
+                    self.provider_name, model, input_tokens, output_tokens
                 )
 
                 return response.choices[0].message.content
-            except Exception as e: # Broad exception for now
+            except Exception as e:
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
@@ -138,7 +198,6 @@ class MistralWrapper(APIWrapper):
                 time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
-
 
 class CohereWrapper(APIWrapper):
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -146,25 +205,23 @@ class CohereWrapper(APIWrapper):
         self.client = cohere.Client(api_key=self.api_key)
         self.provider_name = "cohere"
 
-    def send_request(self, prompt):
+    def send_request(self, prompt, model):
         retries = 0
         while retries < self.max_retries:
             try:
                 response = self.client.chat(
-                    model="command-r",
+                    model=model,
                     messages=[{"role": "user", "content": prompt}]
                 )
 
-                # Record usage
                 input_tokens = response.meta['billed_units']['input_tokens']
                 output_tokens = response.meta['billed_units']['output_tokens']
-
                 self.usage_tracker.record_usage(
-                    self.provider_name, "command-r", input_tokens, output_tokens
+                    self.provider_name, model, input_tokens, output_tokens
                 )
 
                 return response.text
-            except Exception as e: # Broad exception for now
+            except Exception as e:
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
@@ -175,31 +232,28 @@ class CohereWrapper(APIWrapper):
 
         return "API request failed after multiple retries."
 
-
 class GoogleGeminiWrapper(APIWrapper):
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
         super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
         genai.configure(api_key=self.api_key)
-        self.client = genai.GenerativeModel('gemini-pro')
         self.provider_name = "google"
 
-    def send_request(self, prompt):
+    def send_request(self, prompt, model):
         retries = 0
         while retries < self.max_retries:
             try:
-                response = self.client.generate_content(prompt)
+                client = genai.GenerativeModel(model)
+                response = client.generate_content(prompt)
 
-                # Record usage
                 usage_metadata = response.usage_metadata
                 input_tokens = usage_metadata.prompt_token_count
                 output_tokens = usage_metadata.candidates_token_count
-
                 self.usage_tracker.record_usage(
                     self.provider_name, "gemini-pro", input_tokens, output_tokens
                 )
 
                 return response.text
-            except Exception as e: # Broad exception for now, can be refined
+            except Exception as e:
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")

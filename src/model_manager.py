@@ -4,6 +4,8 @@ from src.api_wrappers import (
     CohereWrapper,
     MistralWrapper,
     DeepSeekWrapper,
+    OpenAIWrapper,
+    QwenWrapper,
 )
 from src.usage import UsageTracker
 from datetime import datetime, timedelta
@@ -41,6 +43,18 @@ class ModelManager:
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
+            elif provider_name == "openai":
+                if provider_config.get("api_key") != "YOUR_OPENAI_API_KEY":
+                    self.wrappers[provider_name] = OpenAIWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
+            elif provider_name == "qwen":
+                if provider_config.get("api_key") != "YOUR_QWEN_API_KEY":
+                    self.wrappers[provider_name] = QwenWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
             elif provider_name == "google":
                 if provider_config.get("api_key") != "YOUR_GOOGLE_API_KEY":
                     self.wrappers[provider_name] = GoogleGeminiWrapper(
@@ -49,18 +63,25 @@ class ModelManager:
                     )
 
     def send_request(self, prompt):
-        usable_providers = [p for p in self.config["providers"] if p in self.wrappers]
-
-        if not usable_providers:
-            # No API keys are set, so simulate
-            print("Simulating API call as no API keys are set.")
-            self.usage_tracker.record_usage("anthropic", "claude-3-5-sonnet-20240620", 10, 20)
-            return "This is a simulated response."
-
-        for provider_name in usable_providers:
+        for provider_name, provider_config in self.config["providers"].items():
             if self._is_quota_available(provider_name):
-                print(f"Using provider: {provider_name}")
-                return self.wrappers[provider_name].send_request(prompt)
+                if provider_name in self.wrappers:
+                    # Select the first model from the list for now
+                    if provider_config.get("models"):
+                        model_to_use = provider_config["models"][0]
+                        print(f"Using provider: {provider_name}, model: {model_to_use['name']}")
+                        return self.wrappers[provider_name].send_request(
+                            prompt, model=model_to_use["name"]
+                        )
+
+        # Fallback to simulation if no real request can be made
+        if not self.wrappers:
+            print("Simulating API call as no providers with available quota and API keys are set.")
+            # Simulate usage for the first provider in the config
+            first_provider = list(self.config["providers"].keys())[0]
+            first_model = self.config["providers"][first_provider]["models"][0]["name"]
+            self.usage_tracker.record_usage(first_provider, first_model, 10, 20)
+            return "This is a simulated response."
 
         return "No available models within quota."
 
@@ -95,7 +116,35 @@ class ModelManager:
             return total_requests < limit
         elif provider_name == "mistral":
             return True
+        elif provider_name == "openai":
+            provider_config = self.config["providers"]["openai"]
+            usage = self.usage_tracker.get_usage("openai")
+            if not usage:
+                return True
+            total_cost = 0
+            for model_name, model_usage in usage.items():
+                model_config = next((m for m in provider_config["models"] if m["name"] == model_name), None)
+                if model_config:
+                    input_cost = model_usage.get("total_input_tokens", 0) * model_config["cost_per_input_token"]
+                    output_cost = model_usage.get("total_output_tokens", 0) * model_config["cost_per_output_token"]
+                    total_cost += input_cost + output_cost
+
+            return total_cost < provider_config["free_tier_dollars"]
         elif provider_name == "deepseek":
+            provider_config = self.config["providers"]["deepseek"]
+            usage = self.usage_tracker.get_usage("deepseek")
+            if not usage:
+                return True
+            total_cost = 0
+            for model_name, model_usage in usage.items():
+                model_config = next((m for m in provider_config["models"] if m["name"] == model_name), None)
+                if model_config:
+                    input_cost = model_usage.get("total_input_tokens", 0) * model_config["cost_per_input_token"]
+                    output_cost = model_usage.get("total_output_tokens", 0) * model_config["cost_per_output_token"]
+                    total_cost += input_cost + output_cost
+
+            return total_cost < provider_config["free_tier_dollars"]
+        elif provider_name == "qwen":
             return True
         elif provider_name == "google":
             provider_config = self.config["providers"]["google"]

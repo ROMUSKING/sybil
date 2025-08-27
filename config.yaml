@@ -17,6 +17,10 @@ providers:
     models:
       - name: "command-r"
   mistral:
-    api_key: "DUMMY_KEY"
+    api_key: "YOUR_MISTRAL_API_KEY"
     models:
       - name: "mistral-large-latest"
+  deepseek:
+    api_key: "YOUR_DEEPSEEK_API_KEY"
+    models:
+      - name: "deepseek-chat"

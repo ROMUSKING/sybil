@@ -31,6 +31,14 @@ class ManagerAgent(Agent):
 **Available Tools:**
 {tool_docs}
 
+**Development Workflow:**
+For any coding task, you must follow a strict Test-Driven Development (TDD) process:
+1.  **Write a failing test**: Use the `write_file` tool to create a test file (e.g., `test_my_code.py`) that asserts the desired functionality. The test should fail initially.
+2.  **Run the test**: Use the `run_tests` tool to confirm that the test fails as expected.
+3.  **Write the implementation**: Use the `write_file` tool to create or modify the source code to satisfy the test.
+4.  **Run the test again**: Use the `run_tests` tool to confirm that the test now passes.
+5.  Repeat this cycle for each piece of functionality.
+
 **Action Format:**
 You must output your action in the following XML format.
 

@@ -73,18 +73,13 @@ class ModelManager:
         for provider_name, provider_config in self.config["providers"].items():
             if self._is_quota_available(provider_name):
                 if provider_name in self.wrappers:
-                    # Select the first model from the list for now
                     if provider_config.get("models"):
-                        model_to_use = provider_config["models"][0]
-                        print(f"Using provider: {provider_name}, model: {model_to_use['name']}")
-                        return self.wrappers[provider_name].send_request(
-                            prompt, model=model_to_use["name"]
-                        )
+                        model_to_use = provider_config["models"][0]["name"]
+                        print(f"Using provider: {provider_name}, model: {model_to_use}")
+                        return self.wrappers[provider_name].send_request(prompt, model=model_to_use)
 
-        # Fallback to simulation if no real request can be made
         if not self.wrappers:
             print("Simulating API call as no providers with available quota and API keys are set.")
-            # Simulate usage for the first provider in the config
             first_provider = list(self.config["providers"].keys())[0]
             first_model = self.config["providers"][first_provider]["models"][0]["name"]
             self.usage_tracker.record_usage(first_provider, first_model, 10, 20)

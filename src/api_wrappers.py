@@ -50,7 +50,7 @@ class AnthropicWrapper(APIWrapper):
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise e
+                    raise
                 sleep_time = self.backoff_factor ** retries
                 print(f"API request failed. Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
@@ -59,7 +59,6 @@ class AnthropicWrapper(APIWrapper):
                 raise
 
         return "API request failed after multiple retries."
-
 
 class HuggingFaceWrapper(APIWrapper):
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -92,7 +91,7 @@ class HuggingFaceWrapper(APIWrapper):
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    raise e
                 sleep_time = self.backoff_factor ** retries
                 print(f"API request failed. Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
@@ -232,7 +231,7 @@ class MistralWrapper(APIWrapper):
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    raise e
                 sleep_time = self.backoff_factor ** retries
                 print(f"API request failed. Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
@@ -289,7 +288,7 @@ class GoogleGeminiWrapper(APIWrapper):
                 input_tokens = usage_metadata.prompt_token_count
                 output_tokens = usage_metadata.candidates_token_count
                 self.usage_tracker.record_usage(
-                    self.provider_name, "gemini-pro", input_tokens, output_tokens
+                    self.provider_name, model, input_tokens, output_tokens
                 )
 
                 return response.text

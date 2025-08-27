@@ -20,11 +20,10 @@ def main():
     model_manager = ModelManager(config, usage_tracker)
     manager_agent = ManagerAgent(model_manager)
 
-    try:
-        result = manager_agent.run(args.task)
-        print(f"Result: {result}")
-    except Exception as e:
-        print(f"Caught exception: {e}")
+    result = manager_agent.run(args.task)
+
+    print("\n--- Task Result ---")
+    print(result)
 
     print("\n--- Final Usage ---")
     print(f"Usage: {usage_tracker.usage_data}")

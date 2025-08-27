@@ -2,6 +2,7 @@ import anthropic
 from src.usage import UsageTracker
 import time
 import httpx
+import google.generativeai as genai
 
 class APIWrapper:
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -54,5 +55,40 @@ class AnthropicWrapper(APIWrapper):
             except anthropic.APIStatusError as e:
                 print(f"Anthropic API error: {e.status_code} - {e.response}")
                 raise
+
+        return "API request failed after multiple retries."
+
+
+class GoogleGeminiWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        genai.configure(api_key=self.api_key)
+        self.client = genai.GenerativeModel('gemini-pro')
+        self.provider_name = "google"
+
+    def send_request(self, prompt):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.generate_content(prompt)
+
+                # Record usage
+                usage_metadata = response.usage_metadata
+                input_tokens = usage_metadata.prompt_token_count
+                output_tokens = usage_metadata.candidates_token_count
+
+                self.usage_tracker.record_usage(
+                    self.provider_name, "gemini-pro", input_tokens, output_tokens
+                )
+
+                return response.text
+            except Exception as e: # Broad exception for now, can be refined
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
         return "API request failed after multiple retries."

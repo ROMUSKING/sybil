@@ -1,4 +1,4 @@
-from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper
+from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper, CohereWrapper
 from src.usage import UsageTracker
 from datetime import datetime, timedelta
 
@@ -14,6 +14,12 @@ class ModelManager:
             if provider_name == "anthropic":
                 if provider_config.get("api_key") != "YOUR_ANTHROPIC_API_KEY":
                     self.wrappers[provider_name] = AnthropicWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
+            elif provider_name == "cohere":
+                if provider_config.get("api_key") != "YOUR_COHERE_API_KEY":
+                    self.wrappers[provider_name] = CohereWrapper(
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
@@ -56,6 +62,19 @@ class ModelManager:
                     total_cost += input_cost + output_cost
 
             return total_cost < provider_config["free_tier_dollars"]
+        elif provider_name == "cohere":
+            provider_config = self.config["providers"]["cohere"]
+            limit = provider_config["free_tier_calls_per_month"]
+
+            usage = self.usage_tracker.get_usage("cohere")
+            if not usage:
+                return True
+
+            total_requests = 0
+            for model_name, model_usage in usage.items():
+                total_requests += len(model_usage.get("requests", []))
+
+            return total_requests < limit
         elif provider_name == "google":
             provider_config = self.config["providers"]["google"]
             limit = provider_config["free_tier_requests_per_minute"]

@@ -6,6 +6,7 @@ import google.generativeai as genai
 import cohere
 from mistralai.models import UserMessage
 from mistralai.sdk import Mistral
+import openai
 
 class APIWrapper:
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -58,6 +59,45 @@ class AnthropicWrapper(APIWrapper):
             except anthropic.APIStatusError as e:
                 print(f"Anthropic API error: {e.status_code} - {e.response}")
                 raise
+
+        return "API request failed after multiple retries."
+
+
+class DeepSeekWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = openai.OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.deepseek.com"
+        )
+        self.provider_name = "deepseek"
+
+    def send_request(self, prompt):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.chat.completions.create(
+                    model="deepseek-chat",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                # Record usage
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+
+                self.usage_tracker.record_usage(
+                    self.provider_name, "deepseek-chat", input_tokens, output_tokens
+                )
+
+                return response.choices[0].message.content
+            except Exception as e: # Broad exception for now
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
 

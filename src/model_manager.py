@@ -1,4 +1,10 @@
-from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper, CohereWrapper, MistralWrapper
+from src.api_wrappers import (
+    AnthropicWrapper,
+    GoogleGeminiWrapper,
+    CohereWrapper,
+    MistralWrapper,
+    DeepSeekWrapper,
+)
 from src.usage import UsageTracker
 from datetime import datetime, timedelta
 
@@ -26,6 +32,12 @@ class ModelManager:
             elif provider_name == "mistral":
                 if provider_config.get("api_key") != "YOUR_MISTRAL_API_KEY":
                     self.wrappers[provider_name] = MistralWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
+            elif provider_name == "deepseek":
+                if provider_config.get("api_key") != "YOUR_DEEPSEEK_API_KEY":
+                    self.wrappers[provider_name] = DeepSeekWrapper(
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
@@ -82,6 +94,8 @@ class ModelManager:
 
             return total_requests < limit
         elif provider_name == "mistral":
+            return True
+        elif provider_name == "deepseek":
             return True
         elif provider_name == "google":
             provider_config = self.config["providers"]["google"]

@@ -23,23 +23,34 @@ class ToolRegistry:
 def read_file(file_path: str) -> str:
     """Reads the content of a specified file."""
     print(f"--- TOOL: Reading file: {file_path} ---")
-    # In a real implementation, we would read the file content.
-    # For now, we'll return a placeholder.
-    return f"Content of {file_path}"
+    try:
+        with open(file_path, 'r') as f:
+            return f.read()
+    except Exception as e:
+        return f"Error reading file: {e}"
 
 def write_file(file_path: str, content: str) -> str:
     """Writes content to a specified file."""
     print(f"--- TOOL: Writing to file: {file_path} ---")
     print(f"Content:\n{content}")
-    # In a real implementation, we would write to the file.
-    return f"Successfully wrote to {file_path}"
+    try:
+        with open(file_path, 'w') as f:
+            f.write(content)
+        return f"Successfully wrote to {file_path}"
+    except Exception as e:
+        return f"Error writing to file: {e}"
 
 def shell_execute(command: str) -> str:
     """Executes a shell command."""
     print(f"--- TOOL: Executing shell command: {command} ---")
-    # In a real implementation, we would execute the command.
-    # For now, we'll return a placeholder.
-    return f"Output of command: {command}"
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            return f"Error executing command: {result.stderr}"
+    except Exception as e:
+        return f"Error executing command: {e}"
 
 # Create a global instance for easy access
 tool_registry = ToolRegistry()

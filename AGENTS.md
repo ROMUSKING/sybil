@@ -50,8 +50,8 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] Build a predictable and unambiguous agentic system.
 
 -   **Phase 2: Integrate Advanced Patterns (In Progress)**
-    -   [ ] Implement the ReAct loop for iterative problem-solving.
-    -   [ ] Integrate basic tool use (e.g., `read_file`, `write_file`).
+    -   [x] Implement the ReAct loop for iterative problem-solving.
+    -   [x] Integrate basic tool use (e.g., `read_file`, `write_file`).
     -   [ ] Implement the "Code-then-CoT" approach for code generation.
     -   [ ] Add a basic self-correction mechanism using unit tests.
 
@@ -85,12 +85,12 @@ This section tracks the project's tasks and their status.
 -   [x] **Basic Agent Framework**: Created a base `Agent` class and a `ManagerAgent`.
 -   [x] **CLI**: Built a simple command-line interface for user interaction.
 -   [x] **Project Documentation**: Created this `AGENTS.md` file to guide development.
+-   [x] **ReAct Implementation**: Refactored the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop and connected it to a tool registry.
 
 ### Next Tasks
 
 #### Phase 2: Advanced Patterns
--   [ ] **Implement ReAct Loop**: Refactor the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop.
--   [ ] **Integrate Tools**: Connect the ReAct loop to the existing tool-use infrastructure (e.g., `read_file`, `write_file`).
+-   [ ] **Implement Short-Term Memory**: Enhance the agent's context by automatically summarizing the `Thought -> Action -> Observation` history to manage token limits on long conversations.
 -   [ ] **Code-then-CoT**: Update the agent's prompting to generate code first, then an explanation.
 -   [ ] **Test-Driven Development**: Add the ability for the agent to write and execute unit tests to verify its own code.
 -   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.

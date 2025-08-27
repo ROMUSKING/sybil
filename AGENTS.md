@@ -77,6 +77,9 @@ This section tracks the project's tasks and their status.
     -   [x] Implemented API wrapper for Cohere.
     -   [x] Implemented API wrapper for Mistral AI.
     -   [x] Implemented API wrapper for DeepSeek.
+    -   [x] Implemented API wrapper for OpenAI.
+    -   [x] Implemented API wrapper for Qwen.
+    -   [x] Implemented API wrapper for Hugging Face.
 -   [x] **Quota Management**: Implemented the `ModelManager` to handle model switching based on different quota types (cost-based, RPM, monthly calls).
 -   [x] **Usage Persistence**: Implemented `UsageTracker` to persist usage data across sessions.
 -   [x] **Basic Agent Framework**: Created a base `Agent` class and a `ManagerAgent`.
@@ -93,7 +96,5 @@ This section tracks the project's tasks and their status.
 -   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.
 
 #### Provider Integrations
--   [ ] Add wrapper for OpenAI (gpt-5).
--   [ ] Add wrapper for Qwen.
 -   [ ] Research and add hosted provider for Llama.
 -   [ ] Research and add wrapper for Grok.

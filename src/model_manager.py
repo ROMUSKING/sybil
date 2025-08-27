@@ -6,6 +6,7 @@ from src.api_wrappers import (
     DeepSeekWrapper,
     OpenAIWrapper,
     QwenWrapper,
+    HuggingFaceWrapper,
 )
 from src.usage import UsageTracker
 from datetime import datetime, timedelta
@@ -52,6 +53,12 @@ class ModelManager:
             elif provider_name == "qwen":
                 if provider_config.get("api_key") != "YOUR_QWEN_API_KEY":
                     self.wrappers[provider_name] = QwenWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
+            elif provider_name == "huggingface":
+                if provider_config.get("api_key") != "YOUR_HUGGINGFACE_API_KEY":
+                    self.wrappers[provider_name] = HuggingFaceWrapper(
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
@@ -145,6 +152,8 @@ class ModelManager:
 
             return total_cost < provider_config["free_tier_dollars"]
         elif provider_name == "qwen":
+            return True
+        elif provider_name == "huggingface":
             return True
         elif provider_name == "google":
             provider_config = self.config["providers"]["google"]

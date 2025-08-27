@@ -7,6 +7,7 @@ import cohere
 from mistralai.models import UserMessage
 from mistralai.sdk import Mistral
 import openai
+from huggingface_hub import InferenceClient
 
 class APIWrapper:
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -49,13 +50,52 @@ class AnthropicWrapper(APIWrapper):
                 retries += 1
                 if retries >= self.max_retries:
                     print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    raise e
                 sleep_time = self.backoff_factor ** retries
                 print(f"API request failed. Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
             except anthropic.APIStatusError as e:
                 print(f"Anthropic API error: {e.status_code} - {e.response}")
                 raise
+
+        return "API request failed after multiple retries."
+
+
+class HuggingFaceWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = InferenceClient(token=self.api_key, provider="hf-inference")
+        self.provider_name = "huggingface"
+
+    def send_request(self, prompt, model):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.chat_completion(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=model,
+                )
+
+                # NOTE: The Hugging Face Inference API for chat completion does not
+                # currently provide token usage information in the response.
+                # Therefore, we cannot track usage for these models.
+                # We will record 0 for now.
+                input_tokens = 0
+                output_tokens = 0
+
+                self.usage_tracker.record_usage(
+                    self.provider_name, model, input_tokens, output_tokens
+                )
+
+                return response.choices[0].message.content
+            except Exception as e:
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
 

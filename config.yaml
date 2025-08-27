@@ -38,3 +38,7 @@ providers:
     api_key: "YOUR_QWEN_API_KEY"
     models:
       - name: "qwen-plus"
+  huggingface:
+    api_key: "YOUR_HUGGINGFACE_API_KEY"
+    models:
+      - name: "mistralai/Mistral-7B-Instruct-v0.1" # Example model

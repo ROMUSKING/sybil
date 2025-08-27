@@ -3,6 +3,7 @@ from src.usage import UsageTracker
 import time
 import httpx
 import google.generativeai as genai
+import cohere
 
 class APIWrapper:
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -55,6 +56,42 @@ class AnthropicWrapper(APIWrapper):
             except anthropic.APIStatusError as e:
                 print(f"Anthropic API error: {e.status_code} - {e.response}")
                 raise
+
+        return "API request failed after multiple retries."
+
+
+class CohereWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = cohere.Client(api_key=self.api_key)
+        self.provider_name = "cohere"
+
+    def send_request(self, prompt):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                response = self.client.chat(
+                    model="command-r",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                # Record usage
+                input_tokens = response.meta['billed_units']['input_tokens']
+                output_tokens = response.meta['billed_units']['output_tokens']
+
+                self.usage_tracker.record_usage(
+                    self.provider_name, "command-r", input_tokens, output_tokens
+                )
+
+                return response.text
+            except Exception as e: # Broad exception for now
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
 

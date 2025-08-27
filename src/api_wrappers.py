@@ -4,6 +4,8 @@ import time
 import httpx
 import google.generativeai as genai
 import cohere
+from mistralai.models import UserMessage
+from mistralai.sdk import Mistral
 
 class APIWrapper:
     def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
@@ -56,6 +58,44 @@ class AnthropicWrapper(APIWrapper):
             except anthropic.APIStatusError as e:
                 print(f"Anthropic API error: {e.status_code} - {e.response}")
                 raise
+
+        return "API request failed after multiple retries."
+
+
+class MistralWrapper(APIWrapper):
+    def __init__(self, api_key, usage_tracker: UsageTracker, max_retries=3, backoff_factor=2):
+        super().__init__(api_key, usage_tracker, max_retries, backoff_factor)
+        self.client = Mistral(api_key=self.api_key)
+        self.provider_name = "mistral"
+
+    def send_request(self, prompt):
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                messages = [UserMessage(content=prompt)]
+
+                response = self.client.chat.complete(
+                    model="mistral-large-latest",
+                    messages=messages
+                )
+
+                # Record usage
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+
+                self.usage_tracker.record_usage(
+                    self.provider_name, "mistral-large-latest", input_tokens, output_tokens
+                )
+
+                return response.choices[0].message.content
+            except Exception as e: # Broad exception for now
+                retries += 1
+                if retries >= self.max_retries:
+                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
+                    raise
+                sleep_time = self.backoff_factor ** retries
+                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
         return "API request failed after multiple retries."
 

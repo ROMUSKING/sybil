@@ -1,5 +1,6 @@
-from src.api_wrappers import AnthropicWrapper
+from src.api_wrappers import AnthropicWrapper, GoogleGeminiWrapper
 from src.usage import UsageTracker
+from datetime import datetime, timedelta
 
 class ModelManager:
     def __init__(self, config, usage_tracker: UsageTracker):
@@ -16,7 +17,12 @@ class ModelManager:
                         api_key=provider_config["api_key"],
                         usage_tracker=self.usage_tracker
                     )
-            # Add other providers here later
+            elif provider_name == "google":
+                if provider_config.get("api_key") != "YOUR_GOOGLE_API_KEY":
+                    self.wrappers[provider_name] = GoogleGeminiWrapper(
+                        api_key=provider_config["api_key"],
+                        usage_tracker=self.usage_tracker
+                    )
 
     def send_request(self, prompt):
         usable_providers = [p for p in self.config["providers"] if p in self.wrappers]
@@ -50,6 +56,24 @@ class ModelManager:
                     total_cost += input_cost + output_cost
 
             return total_cost < provider_config["free_tier_dollars"]
+        elif provider_name == "google":
+            provider_config = self.config["providers"]["google"]
+            limit = provider_config["free_tier_requests_per_minute"]
 
-        # Add logic for other providers here
+            usage = self.usage_tracker.get_usage("google")
+            if not usage:
+                return True
+
+            requests_in_last_minute = 0
+            now = datetime.now()
+            one_minute_ago = now - timedelta(minutes=1)
+
+            for model_name, model_usage in usage.items():
+                for request in model_usage.get("requests", []):
+                    request_time = datetime.fromisoformat(request["timestamp"])
+                    if request_time > one_minute_ago:
+                        requests_in_last_minute += 1
+
+            return requests_in_last_minute < limit
+
         return True # Default to available

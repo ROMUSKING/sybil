@@ -86,11 +86,11 @@ This section tracks the project's tasks and their status.
 -   [x] **CLI**: Built a simple command-line interface for user interaction.
 -   [x] **Project Documentation**: Created this `AGENTS.md` file to guide development.
 -   [x] **ReAct Implementation**: Refactored the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop and connected it to a tool registry.
+-   [x] **Short-Term Memory**: Implemented a history truncation mechanism in `ManagerAgent` to manage context window size.
 
 ### Next Tasks
 
 #### Phase 2: Advanced Patterns
--   [ ] **Implement Short-Term Memory**: Enhance the agent's context by automatically summarizing the `Thought -> Action -> Observation` history to manage token limits on long conversations.
 -   [ ] **Code-then-CoT**: Update the agent's prompting to generate code first, then an explanation.
 -   [ ] **Test-Driven Development**: Add the ability for the agent to write and execute unit tests to verify its own code.
 -   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.

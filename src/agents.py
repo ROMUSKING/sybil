@@ -11,10 +11,11 @@ class Agent:
         raise NotImplementedError
 
 class ManagerAgent(Agent):
-    def __init__(self, model_manager: ModelManager, tool_registry: ToolRegistry = global_tool_registry):
+    def __init__(self, model_manager: ModelManager, tool_registry: ToolRegistry = global_tool_registry, max_history_items: int = 5):
         super().__init__("ManagerAgent", model_manager)
         self.tool_registry = tool_registry
         self.max_iterations = 10
+        self.max_history_items = max_history_items
 
     def _create_system_prompt(self):
         tool_docs = ""
@@ -47,6 +48,20 @@ If you have enough information to answer the user's request, you can use the `<f
 </final_answer>
 """
 
+    def _manage_history(self, history: list[str]) -> list[str]:
+        """Truncates the history to prevent it from exceeding the context window."""
+        # Each cycle adds an Action and an Observation, so 2 items.
+        max_len = 1 + (self.max_history_items * 2)
+        if len(history) > max_len:
+            print(f"--- Truncating history from {len(history)} items to a manageable size ---")
+            # Keep the first item (User Request)
+            user_request = history[:1]
+            # Keep the most recent items
+            recent_history = history[-(self.max_history_items * 2):]
+            # Combine them with a marker
+            return user_request + ["... (history truncated) ..."] + recent_history
+        return history
+
     def run(self, task_description: str):
         print(f"--- ManagerAgent starting task: {task_description} ---")
 
@@ -56,6 +71,7 @@ If you have enough information to answer the user's request, you can use the `<f
         for i in range(self.max_iterations):
             print(f"\n--- Iteration {i+1}/{self.max_iterations} ---")
 
+            history = self._manage_history(history)
             prompt = "\n".join(history)
 
             full_prompt = f"{system_prompt}\n\nPrevious Interactions:\n{prompt}"

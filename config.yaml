@@ -1,0 +1,13 @@
+providers:
+  anthropic:
+    api_key: "YOUR_ANTHROPIC_API_KEY"
+    free_tier_dollars: 10.0
+    models:
+      - name: "claude-3-5-sonnet-20240620"
+        cost_per_input_token: 0.000003
+        cost_per_output_token: 0.000015
+  google:
+    api_key: "YOUR_GOOGLE_API_KEY"
+    free_tier_requests_per_minute: 60 # Example value
+    models:
+      - name: "gemini-pro"

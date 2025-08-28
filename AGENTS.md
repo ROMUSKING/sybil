@@ -88,11 +88,11 @@ This section tracks the project's tasks and their status.
 -   [x] **ReAct Implementation**: Refactored the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop and connected it to a tool registry.
 -   [x] **Short-Term Memory**: Implemented a history truncation mechanism in `ManagerAgent` to manage context window size.
 -   [x] **Test-Driven Development**: Added a `run_tests` tool and updated the agent's prompt to support a TDD workflow.
+-   [x] **Code-then-CoT**: Updated the agent's prompt to require final code answers to be in "Code-then-Chain-of-Thought" format.
 
 ### Next Tasks
 
 #### Phase 2: Advanced Patterns
--   [ ] **Code-then-CoT**: Update the agent's prompting to generate code first, then an explanation.
 -   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.
 
 #### Provider Integrations

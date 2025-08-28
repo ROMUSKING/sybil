@@ -50,9 +50,17 @@ You must output your action in the following XML format.
 </tool>
 
 If you have enough information to answer the user's request, you can use the `<final_answer>` tag.
+For tasks involving code, your final answer must follow the "Code-then-CoT" format:
 
 <final_answer>
-  The final answer to the user's request.
+```python
+# Your final, complete, and runnable code block here.
+```
+
+**Explanation:**
+
+- A brief explanation of what the code does.
+- A summary of the key decisions made during implementation.
 </final_answer>
 """
 

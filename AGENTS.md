@@ -61,13 +61,18 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] Handle model selection and API-specific parameter management.
     -   [x] Integrate multiple providers (Anthropic, Google, Cohere, Mistral).
 
--   **Phase 4: Enhance with Iterative Refinement (In Progress)**
-    -   [ ] **Multi-Agent Collaborative Framework**: Implement a hierarchical, graph-based system of specialized agents that collaborate to execute complex software projects.
+-   **Phase 4: Enhance with Iterative Refinement (Complete)**
+    -   [x] **Multi-Agent Collaborative Framework**: Implemented a hierarchical, graph-based system of specialized agents that collaborate to execute complex software projects.
         -   **`SoftwareArchitectAgent`**: Generates a recursive blueprint of the project, defining a dependency graph of nested modules, their components, and implementation tasks.
         -   **`OrchestratorAgent`**: Traverses the blueprint's dependency graph, orchestrating the workflow between other agents and providing them with the full contextual path (global, module, and task-specific context).
         -   **`DeveloperAgent`**: Executes a single task within the full context of its module and dependencies, following a strict TDD workflow.
         -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
     -   [ ] **Long-Term Memory**: Add a mechanism for storing and retrieving information across multiple sessions to handle long-running, complex software projects.
+
+-   **Phase 5: OpenRouter Integration & Refactoring (In Progress)**
+    -   [ ] **Integrate OpenRouter**: Refactor the project to use OpenRouter as a unified proxy for all model providers, simplifying the configuration and model management systems. This will involve using a library like `litellm`.
+    -   [ ] **Implement Role-Based Model Specialization**: Update the `OrchestratorAgent` to assign specific, specialized models from OpenRouter to each agent based on its role (e.g., fast model for development, powerful model for review).
+    -   [ ] **(Future) Investigate AutoGen**: Explore replacing the manual `OrchestratorAgent` loop with a more robust, event-driven framework like AutoGen for managing multi-agent conversations.
 
 ## III. Task Tracker
 
@@ -97,9 +102,9 @@ This section tracks the project's tasks and their status.
 
 ### Next Tasks
 
-#### Phase 4: Multi-Agent Collaborative Framework
--   [x] **Refactor for Hierarchical Blueprints**: Updated the `SoftwareArchitectAgent` to produce recursive, dependency-aware blueprints. Refactored the `OrchestratorAgent` to parse and traverse the blueprint graph. Updated the `DeveloperAgent` and `ReviewerAgent` to consume the new rich, hierarchical context.
--   [x] **Implement Consistency Loop**: Implemented the full feedback loop in the `OrchestratorAgent`, allowing it to handle rejections from the `ReviewerAgent` and pass feedback to the `DeveloperAgent` for iterative refinement.
+#### Phase 5: OpenRouter Integration
+-   [x] **Integrate OpenRouter and Refactor Model Management**: Added `litellm` as a dependency. Overhauled `config.yaml`, `model_manager.py`, and deleted `api_wrappers.py` to use OpenRouter as a unified proxy.
+-   [x] **Implement Role-Based Model Specialization**: Updated agent classes to be initialized with specific, role-appropriate models from OpenRouter, as defined in `config.yaml`.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

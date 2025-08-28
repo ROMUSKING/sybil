@@ -1,174 +1,53 @@
-import re
-from src.api_wrappers import (
-    AnthropicWrapper,
-    GoogleGeminiWrapper,
-    CohereWrapper,
-    MistralWrapper,
-    DeepSeekWrapper,
-    OpenAIWrapper,
-    QwenWrapper,
-    HuggingFaceWrapper,
-)
+import os
+import litellm
 from src.usage import UsageTracker
-from datetime import datetime, timedelta
 
 class ModelManager:
     def __init__(self, config, usage_tracker: UsageTracker):
         self.config = config
         self.usage_tracker = usage_tracker
-        self.wrappers = {}
-        self._initialize_wrappers()
+        # Set the API key for OpenRouter
+        os.environ["OPENROUTER_API_KEY"] = self.config.get("openrouter", {}).get("api_key", "")
+        # Disable litellm's built-in telemetry
+        litellm.telemetry = False
 
-    def _initialize_wrappers(self):
-        for provider_name, provider_config in self.config["providers"].items():
-            if provider_name == "anthropic":
-                if provider_config.get("api_key") != "YOUR_ANTHROPIC_API_KEY":
-                    self.wrappers[provider_name] = AnthropicWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "cohere":
-                if provider_config.get("api_key") != "YOUR_COHERE_API_KEY":
-                    self.wrappers[provider_name] = CohereWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "mistral":
-                if provider_config.get("api_key") != "YOUR_MISTRAL_API_KEY":
-                    self.wrappers[provider_name] = MistralWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "deepseek":
-                if provider_config.get("api_key") != "YOUR_DEEPSEEK_API_KEY":
-                    self.wrappers[provider_name] = DeepSeekWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "openai":
-                if provider_config.get("api_key") != "YOUR_OPENAI_API_KEY":
-                    self.wrappers[provider_name] = OpenAIWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "qwen":
-                if provider_config.get("api_key") != "YOUR_QWEN_API_KEY":
-                    self.wrappers[provider_name] = QwenWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "huggingface":
-                if provider_config.get("api_key") != "YOUR_HUGGINGFACE_API_KEY":
-                    self.wrappers[provider_name] = HuggingFaceWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
-            elif provider_name == "google":
-                if provider_config.get("api_key") != "YOUR_GOOGLE_API_KEY":
-                    self.wrappers[provider_name] = GoogleGeminiWrapper(
-                        api_key=provider_config["api_key"],
-                        usage_tracker=self.usage_tracker
-                    )
+    def send_request(self, prompt, model):
+        """
+        Sends a request to the specified model via OpenRouter and tracks usage.
+        """
+        if not os.environ.get("OPENROUTER_API_KEY"):
+            print("--- SIMULATION MODE: No OpenRouter API key found. ---")
+            # In simulation mode, we just return a placeholder and don't track usage.
+            return f"Simulated response for model {model}."
 
-    def send_request(self, prompt):
-        for provider_name, provider_config in self.config["providers"].items():
-            if self._is_quota_available(provider_name):
-                if provider_name in self.wrappers:
-                    if provider_config.get("models"):
-                        model_to_use = provider_config["models"][0]["name"]
-                        print(f"Using provider: {provider_name}, model: {model_to_use}")
-                        return self.wrappers[provider_name].send_request(prompt, model=model_to_use)
+        print(f"--- Sending request to {model} via OpenRouter ---")
 
-        if not self.wrappers:
-            print("Simulating API call as no providers with available quota and API keys are set.")
-            first_provider = list(self.config["providers"].keys())[0]
-            first_model = self.config["providers"][first_provider]["models"][0]["name"]
-            self.usage_tracker.record_usage(first_provider, first_model, 10, 20)
-            return "This is a simulated response."
+        try:
+            # For simplicity, we'll assume the prompt is the user's message.
+            # A more robust implementation would handle system prompts separately.
+            messages = [{"role": "user", "content": prompt}]
 
-        return "No available models within quota."
+            response = litellm.completion(
+                model=model,
+                messages=messages,
+                api_base="https://openrouter.ai/api/v1" # As per OpenRouter docs
+            )
 
+            # Extract usage info and content
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
+            content = response.choices[0].message.content
 
-    def _is_quota_available(self, provider_name):
-        if provider_name == "anthropic":
-            provider_config = self.config["providers"]["anthropic"]
-            usage = self.usage_tracker.get_usage("anthropic")
-            if not usage:
-                return True
-            total_cost = 0
-            for model_name, model_usage in usage.items():
-                model_config = next((m for m in provider_config["models"] if m["name"] == model_name), None)
-                if model_config:
-                    input_cost = model_usage.get("total_input_tokens", 0) * model_config["cost_per_input_token"]
-                    output_cost = model_usage.get("total_output_tokens", 0) * model_config["cost_per_output_token"]
-                    total_cost += input_cost + output_cost
+            # Track usage
+            # The provider is always 'openrouter', but we track usage by model
+            self.usage_tracker.record_usage(
+                "openrouter", model, input_tokens, output_tokens
+            )
 
-            return total_cost < provider_config["free_tier_dollars"]
-        elif provider_name == "cohere":
-            provider_config = self.config["providers"]["cohere"]
-            limit = provider_config["free_tier_calls_per_month"]
+            return content
 
-            usage = self.usage_tracker.get_usage("cohere")
-            if not usage:
-                return True
-
-            total_requests = 0
-            for model_name, model_usage in usage.items():
-                total_requests += len(model_usage.get("requests", []))
-
-            return total_requests < limit
-        elif provider_name == "mistral":
-            return True
-        elif provider_name == "openai":
-            provider_config = self.config["providers"]["openai"]
-            usage = self.usage_tracker.get_usage("openai")
-            if not usage:
-                return True
-            total_cost = 0
-            for model_name, model_usage in usage.items():
-                model_config = next((m for m in provider_config["models"] if m["name"] == model_name), None)
-                if model_config:
-                    input_cost = model_usage.get("total_input_tokens", 0) * model_config["cost_per_input_token"]
-                    output_cost = model_usage.get("total_output_tokens", 0) * model_config["cost_per_output_token"]
-                    total_cost += input_cost + output_cost
-
-            return total_cost < provider_config["free_tier_dollars"]
-        elif provider_name == "deepseek":
-            provider_config = self.config["providers"]["deepseek"]
-            usage = self.usage_tracker.get_usage("deepseek")
-            if not usage:
-                return True
-            total_cost = 0
-            for model_name, model_usage in usage.items():
-                model_config = next((m for m in provider_config["models"] if m["name"] == model_name), None)
-                if model_config:
-                    input_cost = model_usage.get("total_input_tokens", 0) * model_config["cost_per_input_token"]
-                    output_cost = model_usage.get("total_output_tokens", 0) * model_config["cost_per_output_token"]
-                    total_cost += input_cost + output_cost
-
-            return total_cost < provider_config["free_tier_dollars"]
-        elif provider_name == "qwen":
-            return True
-        elif provider_name == "huggingface":
-            return True
-        elif provider_name == "google":
-            provider_config = self.config["providers"]["google"]
-            limit = provider_config["free_tier_requests_per_minute"]
-
-            usage = self.usage_tracker.get_usage("google")
-            if not usage:
-                return True
-
-            requests_in_last_minute = 0
-            now = datetime.now()
-            one_minute_ago = now - timedelta(minutes=1)
-
-            for model_name, model_usage in usage.items():
-                for request in model_usage.get("requests", []):
-                    request_time = datetime.fromisoformat(request["timestamp"])
-                    if request_time > one_minute_ago:
-                        requests_in_last_minute += 1
-
-            return requests_in_last_minute < limit
-
-        return True # Default to available
+        except Exception as e:
+            # LiteLLM raises exceptions from the underlying provider (e.g., openai.RateLimitError)
+            # or its own exceptions. We can catch them here.
+            print(f"An error occurred while calling the model: {e}")
+            return f"Error: {e}"

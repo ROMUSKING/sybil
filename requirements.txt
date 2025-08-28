@@ -1,8 +1,4 @@
 PyYAML
-anthropic
-google-generativeai
-cohere
-mistralai
 openai
-huggingface_hub
 pytest
+litellm

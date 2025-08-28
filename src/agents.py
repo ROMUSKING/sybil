@@ -1,4 +1,5 @@
 import re
+import time
 import xml.etree.ElementTree as ET
 from src.model_manager import ModelManager
 from src.tools import ToolRegistry, tool_registry as global_tool_registry
@@ -155,17 +156,37 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         logger.error("Could not parse review from reviewer response", extra={"response": raw_response})
         return {"status": "error", "comment": "Could not parse review."}
 
+
 class OrchestratorAgent(Agent):
     """Orchestrates the workflow between other specialized agents."""
     def __init__(self, model_manager: ModelManager, config: dict):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
+        self.performance_data = {}
         agent_models = config.get("agent_models", {})
         self.architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
         self.developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
         self.reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
 
+    def _time_agent_run(self, agent, **kwargs):
+        start_time = time.time()
+        result = agent.run(**kwargs)
+        end_time = time.time()
+        duration = end_time - start_time
+
+        agent_name = agent.name
+        if agent_name not in self.performance_data:
+            self.performance_data[agent_name] = {"total_time": 0, "calls": 0}
+
+        self.performance_data[agent_name]["total_time"] += duration
+        self.performance_data[agent_name]["calls"] += 1
+
+        logger.info(f"Agent {agent_name} finished in {duration:.2f}s")
+        return result
+
+    def get_performance_report(self):
+        return self.performance_data
+
     def _parse_blueprint(self, blueprint_xml: str):
-        # ... (same as before)
         root = ET.fromstring(blueprint_xml)
         graph, tasks_map = {}, {}
         for module in root.findall('.//module'):
@@ -176,7 +197,6 @@ class OrchestratorAgent(Agent):
         return graph, tasks_map
 
     def _topological_sort(self, graph):
-        # ... (same as before)
         sorted_modules, visited = [], set()
         def visit(module):
             if module in visited: return
@@ -189,8 +209,10 @@ class OrchestratorAgent(Agent):
 
     def run(self, task_description: str):
         logger.info("Orchestrator starting task.", extra={"task": task_description})
-        blueprint_xml = self.architect.run(task_description)
+
+        blueprint_xml = self._time_agent_run(self.architect, task_description=task_description)
         logger.info("Blueprint received from Architect.", extra={"blueprint": blueprint_xml})
+
         try:
             graph, tasks_map = self._parse_blueprint(blueprint_xml)
             sorted_modules = self._topological_sort(graph)
@@ -206,9 +228,12 @@ class OrchestratorAgent(Agent):
                 for i in range(max_retries):
                     logger.info(f"Attempt {i+1}/{max_retries} for task.", extra={"task": task})
                     context = f"Module: {module_name}"
-                    dev_result = self.developer.run(task_description=current_task_description, context=context)
+
+                    dev_result = self._time_agent_run(self.developer, task_description=current_task_description, context=context)
+
                     if dev_result.get("status") == "success":
-                        review_result = self.reviewer.run(task_description=task, context=context, files=dev_result.get("files", []))
+                        review_result = self._time_agent_run(self.reviewer, task_description=task, context=context, files=dev_result.get("files", []))
+
                         if review_result.get("status") == "approved":
                             logger.info("Task approved.", extra={"task": task})
                             break

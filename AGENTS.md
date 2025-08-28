@@ -74,6 +74,12 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] **Flexible Configuration**: The `config.yaml` has been overhauled to support a generic `api_keys` section and a `models` mapping, allowing users to define any combination of direct or proxied models and assign them to agent roles.
     -   [x] **Smart Routing**: The `ModelManager` has been re-implemented as a smart router that sets the appropriate API keys as environment variables and dispatches requests to `litellm`, which handles the underlying provider logic.
 
+-   **Phase 6: Observability & Performance Optimization (In Progress)**
+    -   [ ] **Implement Structured Logging**: Replace all `print()` statements with a proper, structured logging framework to capture key events in a machine-readable format.
+    -   [ ] **Integrate Cost Tracking**: Enhance the `UsageTracker` by integrating `litellm.completion_cost()` to store the actual cost of each API call.
+    -   [ ] **Add Performance Benchmarking**: Add timing mechanisms to the `OrchestratorAgent` to measure the execution time of each agent and task.
+    -   [ ] **Create Analytics Report**: Generate a comprehensive summary report at the end of each run with cost, performance, and usage metrics.
+
 ## III. Task Tracker
 
 This section tracks the project's tasks and their status.
@@ -101,6 +107,10 @@ This section tracks the project's tasks and their status.
 -   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
 
 ### Next Tasks
+
+#### Phase 6: Observability & Performance
+-   [x] **Implement Structured Logging**: Created a `src/logger.py` module and replaced all `print()` statements throughout the application with structured, configurable logging.
+-   [In Progress] **Integrate Cost Tracking**: Enhance the `UsageTracker` by integrating `litellm.completion_cost()` to store the actual cost of each API call.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

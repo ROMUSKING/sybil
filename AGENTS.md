@@ -62,11 +62,11 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] Integrate multiple providers (Anthropic, Google, Cohere, Mistral).
 
 -   **Phase 4: Enhance with Iterative Refinement (In Progress)**
-    -   [ ] **Multi-Agent "Software Team" Architecture**: Implement a collaborative system of specialized agents that mimic a real-world software development team.
-        -   **`SoftwareArchitectAgent`**: Decomposes high-level user requests into a detailed technical blueprint, including file structure, dependencies, and a sequence of implementation tasks.
-        -   **`DeveloperAgent`**: Executes the individual tasks from the blueprint using a strict TDD workflow.
-        -   **`ReviewerAgent`**: Reviews the `DeveloperAgent`'s code for correctness, style, and adherence to the architect's plan.
-        -   **`OrchestratorAgent`**: Manages the end-to-end workflow, passing tasks and feedback between the other agents in a "consistency loop" until the code is approved.
+    -   [ ] **Multi-Agent Collaborative Framework**: Implement a hierarchical, graph-based system of specialized agents that collaborate to execute complex software projects.
+        -   **`SoftwareArchitectAgent`**: Generates a recursive blueprint of the project, defining a dependency graph of nested modules, their components, and implementation tasks.
+        -   **`OrchestratorAgent`**: Traverses the blueprint's dependency graph, orchestrating the workflow between other agents and providing them with the full contextual path (global, module, and task-specific context).
+        -   **`DeveloperAgent`**: Executes a single task within the full context of its module and dependencies, following a strict TDD workflow.
+        -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
     -   [ ] **Long-Term Memory**: Add a mechanism for storing and retrieving information across multiple sessions to handle long-running, complex software projects.
 
 ## III. Task Tracker
@@ -97,10 +97,9 @@ This section tracks the project's tasks and their status.
 
 ### Next Tasks
 
-#### Phase 4: Multi-Agent Architecture
--   [x] **Implement `SoftwareArchitectAgent`**: Created the new `SoftwareArchitectAgent` class and updated the main orchestrator to call it to generate a project blueprint.
--   [In Progress] **Implement `DeveloperAgent` and `ReviewerAgent`**: Create the agents responsible for coding and reviewing.
--   [ ] **Implement Orchestrator**: Refactor the main control loop to manage the interactions between the new architect, developer, and reviewer agents.
+#### Phase 4: Multi-Agent Collaborative Framework
+-   [x] **Refactor for Hierarchical Blueprints**: Updated the `SoftwareArchitectAgent` to produce recursive, dependency-aware blueprints. Refactored the `OrchestratorAgent` to parse and traverse the blueprint graph. Updated the `DeveloperAgent` and `ReviewerAgent` to consume the new rich, hierarchical context.
+-   [In Progress] **Implement Consistency Loop**: Implement the full feedback loop where the `OrchestratorAgent` handles rejections from the `ReviewerAgent` and passes the feedback back to the `DeveloperAgent` for another development cycle.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

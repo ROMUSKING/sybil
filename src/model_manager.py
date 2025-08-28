@@ -6,48 +6,50 @@ class ModelManager:
     def __init__(self, config, usage_tracker: UsageTracker):
         self.config = config
         self.usage_tracker = usage_tracker
-        # Set the API key for OpenRouter
-        os.environ["OPENROUTER_API_KEY"] = self.config.get("openrouter", {}).get("api_key", "")
-        # Disable litellm's built-in telemetry
+        self.models_map = self.config.get("models", {})
+
+        # Set API keys as environment variables for LiteLLM
+        api_keys = self.config.get("api_keys", {})
+        for provider, key in api_keys.items():
+            env_var_name = f"{provider.upper()}_API_KEY"
+            os.environ[env_var_name] = key
+            print(f"Set API key for {provider.upper()}")
+
         litellm.telemetry = False
 
-    def send_request(self, prompt, model):
+    def send_request(self, prompt: str, friendly_model_name: str) -> str:
         """
-        Sends a request to the specified model via OpenRouter and tracks usage.
+        Sends a request to the specified model using LiteLLM as a unified interface.
         """
-        if not os.environ.get("OPENROUTER_API_KEY"):
-            print("--- SIMULATION MODE: No OpenRouter API key found. ---")
-            # In simulation mode, we just return a placeholder and don't track usage.
-            return f"Simulated response for model {model}."
+        model_info = self.models_map.get(friendly_model_name)
+        if not model_info:
+            return f"Error: Model '{friendly_model_name}' not found in config.yaml."
 
-        print(f"--- Sending request to {model} via OpenRouter ---")
+        litellm_model_name = model_info.get("litellm_model_name")
+        if not litellm_model_name:
+            return f"Error: 'litellm_model_name' not defined for model '{friendly_model_name}'."
+
+        print(f"--- Sending request to '{friendly_model_name}' (using litellm model: '{litellm_model_name}') ---")
 
         try:
-            # For simplicity, we'll assume the prompt is the user's message.
-            # A more robust implementation would handle system prompts separately.
             messages = [{"role": "user", "content": prompt}]
 
             response = litellm.completion(
-                model=model,
-                messages=messages,
-                api_base="https://openrouter.ai/api/v1" # As per OpenRouter docs
+                model=litellm_model_name,
+                messages=messages
             )
 
-            # Extract usage info and content
             input_tokens = response.usage.prompt_tokens
             output_tokens = response.usage.completion_tokens
             content = response.choices[0].message.content
 
-            # Track usage
-            # The provider is always 'openrouter', but we track usage by model
+            # Track usage by the friendly model name
             self.usage_tracker.record_usage(
-                "openrouter", model, input_tokens, output_tokens
+                "litellm", friendly_model_name, input_tokens, output_tokens
             )
 
             return content
 
         except Exception as e:
-            # LiteLLM raises exceptions from the underlying provider (e.g., openai.RateLimitError)
-            # or its own exceptions. We can catch them here.
-            print(f"An error occurred while calling the model: {e}")
+            print(f"An error occurred while calling the model '{litellm_model_name}': {e}")
             return f"Error: {e}"

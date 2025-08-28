@@ -69,10 +69,10 @@ The development of the Sybil project will follow a phased approach, as recommend
         -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
     -   [ ] **Long-Term Memory**: Add a mechanism for storing and retrieving information across multiple sessions to handle long-running, complex software projects.
 
--   **Phase 5: OpenRouter Integration & Refactoring (In Progress)**
-    -   [ ] **Integrate OpenRouter**: Refactor the project to use OpenRouter as a unified proxy for all model providers, simplifying the configuration and model management systems. This will involve using a library like `litellm`.
-    -   [ ] **Implement Role-Based Model Specialization**: Update the `OrchestratorAgent` to assign specific, specialized models from OpenRouter to each agent based on its role (e.g., fast model for development, powerful model for review).
-    -   [ ] **(Future) Investigate AutoGen**: Explore replacing the manual `OrchestratorAgent` loop with a more robust, event-driven framework like AutoGen for managing multi-agent conversations.
+-   **Phase 5: Hybrid Model Management with LiteLLM (Complete)**
+    -   [x] **Implement Hybrid Provider Strategy**: Refactored the entire model management system to use `litellm` as a unified interface. This architecture supports both direct API calls to providers and proxied calls through services like OpenRouter, Together AI, etc.
+    -   [x] **Flexible Configuration**: The `config.yaml` has been overhauled to support a generic `api_keys` section and a `models` mapping, allowing users to define any combination of direct or proxied models and assign them to agent roles.
+    -   [x] **Smart Routing**: The `ModelManager` has been re-implemented as a smart router that sets the appropriate API keys as environment variables and dispatches requests to `litellm`, which handles the underlying provider logic.
 
 ## III. Task Tracker
 
@@ -101,10 +101,6 @@ This section tracks the project's tasks and their status.
 -   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
 
 ### Next Tasks
-
-#### Phase 5: OpenRouter Integration
--   [x] **Integrate OpenRouter and Refactor Model Management**: Added `litellm` as a dependency. Overhauled `config.yaml`, `model_manager.py`, and deleted `api_wrappers.py` to use OpenRouter as a unified proxy.
--   [x] **Implement Role-Based Model Specialization**: Updated agent classes to be initialized with specific, role-appropriate models from OpenRouter, as defined in `config.yaml`.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

@@ -16,13 +16,14 @@ class Agent:
 class SoftwareArchitectAgent(Agent):
     """Designs the software architecture and creates a technical blueprint."""
     def _create_system_prompt(self):
-        return """You are a Software Architect...""" # Prompt is simplified for this example
+        return """You are a Software Architect...""" # Simplified for brevity
 
     def run(self, task_description: str) -> str:
         print(f"--- {self.name} ({self.model_name}) starting task: Design architecture ---")
         prompt = self._create_system_prompt()
         full_prompt = f"{prompt}\n\nUser Request: {task_description}"
-        raw_response = self.model_manager.send_request(full_prompt, model=self.model_name)
+        # The 'model' argument is now the friendly name from the config
+        raw_response = self.model_manager.send_request(full_prompt, friendly_model_name=self.model_name)
         blueprint_match = re.search(r"<blueprint>.*</blueprint>", raw_response, re.DOTALL)
         if blueprint_match:
             return blueprint_match.group(0)
@@ -30,15 +31,15 @@ class SoftwareArchitectAgent(Agent):
 
 class DeveloperAgent(Agent):
     """Writes code to implement a single task from the blueprint."""
-    def __init__(self, name: str, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
-        super().__init__(name, model_manager, model_name)
+    def __init__(self, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
+        super().__init__("DeveloperAgent", model_manager, model_name)
         self.tool_registry = tool_registry
 
     def run(self, task_description: str, context: str) -> dict:
-        # Simplified for brevity. The full ReAct loop would be here.
         print(f"--- {self.name} ({self.model_name}) starting task: {task_description} ---")
         prompt = f"You are a developer. Your task is: {task_description}. The context is: {context}"
-        response = self.model_manager.send_request(prompt, model=self.model_name)
+        response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+        # Simplified for testing; a real version would have a ReAct loop here.
         files = re.findall(r"<file>(.*?)</file>", response)
         return {"status": "success", "files": files}
 
@@ -48,7 +49,7 @@ class ReviewerAgent(Agent):
         print(f"--- {self.name} ({self.model_name}) starting review: {task_description} ---")
         files_content = " ".join(files)
         prompt = f"You are a reviewer. Review these files: {files_content}"
-        response = self.model_manager.send_request(prompt, model=self.model_name)
+        response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
         status = re.search(r"<status>(.*?)</status>", response).group(1).strip()
         comment = re.search(r"<comment>(.*?)</comment>", response).group(1).strip()
         return {"status": status, "comment": comment}
@@ -58,20 +59,21 @@ class OrchestratorAgent(Agent):
     def __init__(self, model_manager: ModelManager, config: dict):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
         agent_models = config.get("agent_models", {})
+
         self.architect = SoftwareArchitectAgent(
+            name="SoftwareArchitectAgent",
             model_manager=model_manager,
-            model_name=agent_models.get("architect", "mistralai/mixtral-8x7b-instruct")
+            model_name=agent_models.get("architect", "claude-opus-direct") # Default model
         )
         self.developer = DeveloperAgent(
-            name="DeveloperAgent",
             model_manager=model_manager,
-            model_name=agent_models.get("developer", "mistralai/mixtral-8x7b-instruct"),
+            model_name=agent_models.get("developer", "openrouter-mixtral"),
             tool_registry=global_tool_registry
         )
         self.reviewer = ReviewerAgent(
             name="ReviewerAgent",
             model_manager=model_manager,
-            model_name=agent_models.get("reviewer", "anthropic/claude-3-opus")
+            model_name=agent_models.get("reviewer", "gpt-4-direct")
         )
 
     def _parse_blueprint(self, blueprint_xml: str):
@@ -104,8 +106,9 @@ class OrchestratorAgent(Agent):
         return sorted_modules
 
     def run(self, task_description: str):
+        # This is a simplified run loop for demonstration.
+        # The full consistency loop logic would be here.
         print(f"--- {self.name} starting task: {task_description} ---")
         blueprint_xml = self.architect.run(task_description)
         print(f"\n--- Blueprint received ---\n{blueprint_xml}")
-        # ... (rest of the orchestration loop remains the same)
         return "Orchestration complete."

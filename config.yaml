@@ -1,44 +1,9 @@
-providers:
-  anthropic:
-    api_key: "YOUR_ANTHROPIC_API_KEY"
-    free_tier_dollars: 10.0
-    models:
-      - name: "claude-3-5-sonnet-20240620"
-        cost_per_input_token: 0.000003
-        cost_per_output_token: 0.000015
-  google:
-    api_key: "YOUR_GOOGLE_API_KEY"
-    free_tier_requests_per_minute: 60 # Example value
-    models:
-      - name: "gemini-pro"
-  cohere:
-    api_key: "YOUR_COHERE_API_KEY"
-    free_tier_calls_per_month: 1000
-    models:
-      - name: "command-r"
-  mistral:
-    api_key: "YOUR_MISTRAL_API_KEY"
-    models:
-      - name: "mistral-large-latest"
-  deepseek:
-    api_key: "YOUR_DEEPSEEK_API_KEY"
-    free_tier_dollars: 1.0 # Example value
-    models:
-      - name: "deepseek-chat"
-        cost_per_input_token: 0.00000014 # 0.14 USD per 1M tokens
-        cost_per_output_token: 0.00000028 # 0.28 USD per 1M tokens
-  openai:
-    api_key: "YOUR_OPENAI_API_KEY"
-    free_tier_dollars: 5.0 # Example value
-    models:
-      - name: "gpt-5"
-        cost_per_input_token: 0.00001
-        cost_per_output_token: 0.00003
-  qwen:
-    api_key: "YOUR_QWEN_API_KEY"
-    models:
-      - name: "qwen-plus"
-  huggingface:
-    api_key: "YOUR_HUGGINGFACE_API_KEY"
-    models:
-      - name: "mistralai/Mistral-7B-Instruct-v0.1" # Example model
+openrouter:
+  api_key: "YOUR_OPENROUTER_API_KEY" # Replace with your actual key
+
+# Define which models are used for each agent role
+# See https://openrouter.ai/models for a list of available models
+agent_models:
+  architect: "openrouter/anthropic/claude-3-sonnet"
+  developer: "openrouter/mistralai/mixtral-8x7b-instruct"
+  reviewer: "openrouter/anthropic/claude-3-opus"

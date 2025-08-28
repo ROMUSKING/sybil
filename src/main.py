@@ -18,7 +18,7 @@ def main():
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
-    orchestrator_agent = OrchestratorAgent(model_manager)
+    orchestrator_agent = OrchestratorAgent(model_manager, config)
 
     result = orchestrator_agent.run(args.task)
 

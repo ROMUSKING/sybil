@@ -3,6 +3,7 @@ import argparse
 from src.usage import UsageTracker
 from src.model_manager import ModelManager
 from src.agents import OrchestratorAgent
+from src.logger import logger
 
 USAGE_FILE = "usage.json"
 
@@ -15,6 +16,8 @@ def main():
     parser.add_argument("task", type=str, help="The task for the agent to perform.")
     args = parser.parse_args()
 
+    logger.info("Sybil starting.", extra={"task": args.task})
+
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
@@ -22,11 +25,9 @@ def main():
 
     result = orchestrator_agent.run(args.task)
 
-    print("\n--- Task Result ---")
-    print(result)
+    logger.info("Sybil finished.", extra={"task_result": result})
+    logger.info("Final usage.", extra={"usage_data": usage_tracker.usage_data})
 
-    print("\n--- Final Usage ---")
-    print(f"Usage: {usage_tracker.usage_data}")
 
 if __name__ == "__main__":
     main()

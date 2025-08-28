@@ -49,11 +49,12 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] Ensure clarity, context management, and structured formatting.
     -   [x] Build a predictable and unambiguous agentic system.
 
--   **Phase 2: Integrate Advanced Patterns (In Progress)**
+-   **Phase 2: Integrate Advanced Patterns (Complete)**
     -   [x] Implement the ReAct loop for iterative problem-solving.
     -   [x] Integrate basic tool use (e.g., `read_file`, `write_file`).
-    -   [ ] Implement the "Code-then-CoT" approach for code generation.
-    -   [ ] Add a basic self-correction mechanism using unit tests.
+    -   [x] Implement the "Code-then-CoT" approach for code generation.
+    -   [x] Add a basic self-correction mechanism using unit tests (via TDD feature).
+    -   [x] Improve error handling for core API wrappers.
 
 -   **Phase 3: Build the Multi-Provider Layer (Complete)**
     -   [x] Construct a dedicated routing layer (`ModelManager`).
@@ -89,11 +90,9 @@ This section tracks the project's tasks and their status.
 -   [x] **Short-Term Memory**: Implemented a history truncation mechanism in `ManagerAgent` to manage context window size.
 -   [x] **Test-Driven Development**: Added a `run_tests` tool and updated the agent's prompt to support a TDD workflow.
 -   [x] **Code-then-CoT**: Updated the agent's prompt to require final code answers to be in "Code-then-Chain-of-Thought" format.
+-   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
 
 ### Next Tasks
-
-#### Phase 2: Advanced Patterns
--   [ ] **Improve Error Handling**: Refactor the API wrappers to catch more specific exceptions for each provider, rather than the broad `except Exception`.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

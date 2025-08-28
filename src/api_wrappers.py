@@ -46,17 +46,26 @@ class AnthropicWrapper(APIWrapper):
                 if message.content and isinstance(message.content, list) and len(message.content) > 0:
                     return message.content[0].text
                 return ""
+            except anthropic.RateLimitError as e:
+                print(f"Anthropic API request exceeded rate limit: {e}")
+                return f"Error: Anthropic rate limit exceeded. {e}"
+            except anthropic.AuthenticationError as e:
+                print(f"Anthropic API authentication error: {e}")
+                return f"Error: Anthropic authentication failed. Check your API key. {e}"
             except (anthropic.APIConnectionError, httpx.RequestError) as e:
+                print(f"Failed to connect to Anthropic API: {e}")
                 retries += 1
                 if retries >= self.max_retries:
-                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    return f"Error: Could not connect to Anthropic after {self.max_retries} retries. {e}"
                 sleep_time = self.backoff_factor ** retries
-                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                print(f"Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
             except anthropic.APIStatusError as e:
-                print(f"Anthropic API error: {e.status_code} - {e.response}")
-                raise
+                print(f"Anthropic API returned an unexpected status error: {e.status_code} - {e.response}")
+                return f"Error: Anthropic API returned an unexpected status error: {e.status_code}. {e}"
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+                return f"Error: An unexpected error occurred. {e}"
 
         return "API request failed after multiple retries."
 
@@ -123,14 +132,26 @@ class QwenWrapper(APIWrapper):
                 )
 
                 return response.choices[0].message.content
-            except Exception as e:
+            except openai.RateLimitError as e:
+                print(f"{self.provider_name.capitalize()} API request exceeded rate limit: {e}")
+                return f"Error: {self.provider_name.capitalize()} rate limit exceeded. {e}"
+            except openai.AuthenticationError as e:
+                print(f"{self.provider_name.capitalize()} API authentication error: {e}")
+                return f"Error: {self.provider_name.capitalize()} authentication failed. Check your API key. {e}"
+            except openai.APIConnectionError as e:
+                print(f"Failed to connect to {self.provider_name.capitalize()} API: {e}")
                 retries += 1
                 if retries >= self.max_retries:
-                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    return f"Error: Could not connect to {self.provider_name.capitalize()} after {self.max_retries} retries. {e}"
                 sleep_time = self.backoff_factor ** retries
-                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                print(f"Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
+            except openai.APIError as e:
+                print(f"{self.provider_name.capitalize()} API returned an API Error: {e}")
+                return f"Error: A {self.provider_name.capitalize()} API error occurred. {e}"
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+                return f"Error: An unexpected error occurred. {e}"
 
         return "API request failed after multiple retries."
 
@@ -156,14 +177,26 @@ class OpenAIWrapper(APIWrapper):
                 )
 
                 return response.choices[0].message.content
-            except Exception as e:
+            except openai.RateLimitError as e:
+                print(f"{self.provider_name.capitalize()} API request exceeded rate limit: {e}")
+                return f"Error: {self.provider_name.capitalize()} rate limit exceeded. {e}"
+            except openai.AuthenticationError as e:
+                print(f"{self.provider_name.capitalize()} API authentication error: {e}")
+                return f"Error: {self.provider_name.capitalize()} authentication failed. Check your API key. {e}"
+            except openai.APIConnectionError as e:
+                print(f"Failed to connect to {self.provider_name.capitalize()} API: {e}")
                 retries += 1
                 if retries >= self.max_retries:
-                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    return f"Error: Could not connect to {self.provider_name.capitalize()} after {self.max_retries} retries. {e}"
                 sleep_time = self.backoff_factor ** retries
-                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                print(f"Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
+            except openai.APIError as e:
+                print(f"{self.provider_name.capitalize()} API returned an API Error: {e}")
+                return f"Error: A {self.provider_name.capitalize()} API error occurred. {e}"
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+                return f"Error: An unexpected error occurred. {e}"
 
         return "API request failed after multiple retries."
 
@@ -192,14 +225,26 @@ class DeepSeekWrapper(APIWrapper):
                 )
 
                 return response.choices[0].message.content
-            except Exception as e:
+            except openai.RateLimitError as e:
+                print(f"{self.provider_name.capitalize()} API request exceeded rate limit: {e}")
+                return f"Error: {self.provider_name.capitalize()} rate limit exceeded. {e}"
+            except openai.AuthenticationError as e:
+                print(f"{self.provider_name.capitalize()} API authentication error: {e}")
+                return f"Error: {self.provider_name.capitalize()} authentication failed. Check your API key. {e}"
+            except openai.APIConnectionError as e:
+                print(f"Failed to connect to {self.provider_name.capitalize()} API: {e}")
                 retries += 1
                 if retries >= self.max_retries:
-                    print(f"API request failed after {self.max_retries} retries. Error: {e}")
-                    raise
+                    return f"Error: Could not connect to {self.provider_name.capitalize()} after {self.max_retries} retries. {e}"
                 sleep_time = self.backoff_factor ** retries
-                print(f"API request failed. Retrying in {sleep_time} seconds...")
+                print(f"Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
+            except openai.APIError as e:
+                print(f"{self.provider_name.capitalize()} API returned an API Error: {e}")
+                return f"Error: A {self.provider_name.capitalize()} API error occurred. {e}"
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+                return f"Error: An unexpected error occurred. {e}"
 
         return "API request failed after multiple retries."
 

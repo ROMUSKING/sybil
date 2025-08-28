@@ -3,6 +3,7 @@ from src.model_manager import ModelManager
 from src.tools import ToolRegistry, tool_registry as global_tool_registry
 
 class Agent:
+    """Base class for all agents."""
     def __init__(self, name, model_manager: ModelManager):
         self.name = name
         self.model_manager = model_manager
@@ -10,142 +11,93 @@ class Agent:
     def run(self, task_description: str):
         raise NotImplementedError
 
-class ManagerAgent(Agent):
-    def __init__(self, model_manager: ModelManager, tool_registry: ToolRegistry = global_tool_registry, max_history_items: int = 5):
-        super().__init__("ManagerAgent", model_manager)
-        self.tool_registry = tool_registry
-        self.max_iterations = 10
-        self.max_history_items = max_history_items
+class SoftwareArchitectAgent(Agent):
+    """
+    An agent that designs the software architecture and creates a technical blueprint.
+    """
+    def __init__(self, model_manager: ModelManager):
+        super().__init__("SoftwareArchitectAgent", model_manager)
 
     def _create_system_prompt(self):
-        tool_docs = ""
-        for name, func in self.tool_registry._tools.items():
-            tool_docs += f"- {name}: {func.__doc__}\n"
+        return """You are a Software Architect. Your role is to take a high-level user request and create a detailed technical blueprint for the development team.
 
-        return f"""You are ManagerAgent, an AI assistant that solves user requests by breaking them down into a series of steps. You must use the following 'Thought -> Action -> Observation' process:
+You must decompose the request into a series of logical, sequential tasks. You must also define the necessary file structure and dependencies.
 
-1.  **Thought**: Reason about the user's request and decide what tool to use and how to use it.
-2.  **Action**: Choose a tool from the available list and specify the parameters. Your action must be formatted as XML.
-3.  **Observation**: After you specify an action, the system will execute it and you will receive the result.
+Your final output must be a single XML block enclosed in `<blueprint>` tags. The blueprint must contain a list of `<task>` elements. Each task should be a clear, actionable instruction for the DeveloperAgent.
 
-**Available Tools:**
-{tool_docs}
-
-**Development Workflow:**
-For any coding task, you must follow a strict Test-Driven Development (TDD) process:
-1.  **Write a failing test**: Use the `write_file` tool to create a test file (e.g., `test_my_code.py`) that asserts the desired functionality. The test should fail initially.
-2.  **Run the test**: Use the `run_tests` tool to confirm that the test fails as expected.
-3.  **Write the implementation**: Use the `write_file` tool to create or modify the source code to satisfy the test.
-4.  **Run the test again**: Use the `run_tests` tool to confirm that the test now passes.
-5.  Repeat this cycle for each piece of functionality.
-
-**Action Format:**
-You must output your action in the following XML format.
-
-<tool>
-  <tool_name>name_of_the_tool</tool_name>
-  <tool_params>
-    <param_name>param_value</param_name>
-  </tool_params>
-</tool>
-
-If you have enough information to answer the user's request, you can use the `<final_answer>` tag.
-For tasks involving code, your final answer must follow the "Code-then-CoT" format:
-
-<final_answer>
-```python
-# Your final, complete, and runnable code block here.
-```
-
-**Explanation:**
-
-- A brief explanation of what the code does.
-- A summary of the key decisions made during implementation.
-</final_answer>
+Example Blueprint:
+<blueprint>
+  <files>
+    <file>src/main.py</file>
+    <file>src/utils.py</file>
+    <file>tests/test_utils.py</file>
+  </files>
+  <dependencies>
+    <dependency>flask</dependency>
+    <dependency>pytest</dependency>
+  </dependencies>
+  <tasks>
+    <task id="1" description="Create the basic Flask app structure in src/main.py." />
+    <task id="2" description="Implement a utility function `is_prime` in src/utils.py." />
+    <task id="3" description="Write a unit test for the `is_prime` function in tests/test_utils.py." />
+  </tasks>
+</blueprint>
 """
 
-    def _manage_history(self, history: list[str]) -> list[str]:
-        """Truncates the history to prevent it from exceeding the context window."""
-        # Each cycle adds an Action and an Observation, so 2 items.
-        max_len = 1 + (self.max_history_items * 2)
-        if len(history) > max_len:
-            print(f"--- Truncating history from {len(history)} items to a manageable size ---")
-            # Keep the first item (User Request)
-            user_request = history[:1]
-            # Keep the most recent items
-            recent_history = history[-(self.max_history_items * 2):]
-            # Combine them with a marker
-            return user_request + ["... (history truncated) ..."] + recent_history
-        return history
+    def run(self, task_description: str) -> str:
+        print(f"--- {self.name} starting task: Design architecture for '{task_description}' ---")
+        prompt = self._create_system_prompt()
+        full_prompt = f"{prompt}\n\nUser Request: {task_description}"
+
+        raw_response = self.model_manager.send_request(full_prompt)
+        print(f"Raw response from architect:\n{raw_response}")
+
+        blueprint_match = re.search(r"<blueprint>(.*?)</blueprint>", raw_response, re.DOTALL)
+        if blueprint_match:
+            blueprint = blueprint_match.group(1).strip()
+            return f"<blueprint>{blueprint}</blueprint>"
+        else:
+            return "Error: Could not generate a valid blueprint."
+
+class DeveloperAgent(Agent):
+    """A placeholder for the agent that will write the code."""
+    def __init__(self, model_manager: ModelManager):
+        super().__init__("DeveloperAgent", model_manager)
 
     def run(self, task_description: str):
-        print(f"--- ManagerAgent starting task: {task_description} ---")
+        print(f"--- {self.name} received task: {task_description} ---")
+        return "Code for the task would be generated here."
 
-        system_prompt = self._create_system_prompt()
-        history = [f"User Request: {task_description}"]
+class ReviewerAgent(Agent):
+    """A placeholder for the agent that will review the code."""
+    def __init__(self, model_manager: ModelManager):
+        super().__init__("ReviewerAgent", model_manager)
 
-        for i in range(self.max_iterations):
-            print(f"\n--- Iteration {i+1}/{self.max_iterations} ---")
+    def run(self, code_to_review: str):
+        print(f"--- {self.name} received code for review ---")
+        return "Code review feedback would be generated here."
 
-            history = self._manage_history(history)
-            prompt = "\n".join(history)
+class OrchestratorAgent(Agent):
+    """
+    The main agent that orchestrates the workflow between other specialized agents.
+    """
+    def __init__(self, model_manager: ModelManager, tool_registry: ToolRegistry = global_tool_registry):
+        super().__init__("OrchestratorAgent", model_manager)
+        self.tool_registry = tool_registry
+        self.architect = SoftwareArchitectAgent(model_manager)
+        self.developer = DeveloperAgent(model_manager)
+        self.reviewer = ReviewerAgent(model_manager)
 
-            full_prompt = f"{system_prompt}\n\nPrevious Interactions:\n{prompt}"
+    def run(self, task_description: str):
+        print(f"--- {self.name} starting task: {task_description} ---")
 
-            raw_response = self.model_manager.send_request(full_prompt)
+        # Step 1: Call the Architect to get the blueprint
+        blueprint_xml = self.architect.run(task_description)
 
-            if not raw_response:
-                print("--- Agent received no response from model. Halting. ---")
-                return "Error: No response from model."
+        print("\n--- Blueprint received from Architect ---")
+        print(blueprint_xml)
 
-            print(f"Raw response from model:\n{raw_response}")
+        # The rest of the orchestration logic will be implemented in future steps.
+        # For now, we just demonstrate the first step of the new workflow.
 
-            final_answer_match = re.search(r"<final_answer>(.*?)</final_answer>", raw_response, re.DOTALL)
-            if final_answer_match:
-                final_answer = final_answer_match.group(1).strip()
-                print(f"--- Final Answer Found ---\n{final_answer}")
-                return final_answer
-
-            tool_match = re.search(r"<tool>(.*?)</tool>", raw_response, re.DOTALL)
-            if not tool_match:
-                print("--- No valid action found in response. Halting. ---")
-                history.append(f"Observation: Invalid action format. Please use the correct XML format for tools.")
-                continue
-
-            tool_xml = tool_match.group(1)
-
-            tool_name_match = re.search(r"<tool_name>(.*?)</tool_name>", tool_xml, re.DOTALL)
-            tool_params_xml_match = re.search(r"<tool_params>(.*?)</tool_params>", tool_xml, re.DOTALL)
-
-            if not tool_name_match or not tool_params_xml_match:
-                print("--- Invalid tool format (missing name or params). Halting. ---")
-                history.append("Observation: Invalid tool format. You must include <tool_name> and <tool_params>.")
-                continue
-
-            tool_name = tool_name_match.group(1).strip()
-            tool_params_xml = tool_params_xml_match.group(1).strip()
-
-            params = {}
-            param_matches = re.findall(r"<(.*?)>(.*?)</\1>", tool_params_xml, re.DOTALL)
-            for key, value in param_matches:
-                params[key.strip()] = value.strip()
-
-            tool_function = self.tool_registry.get_tool(tool_name)
-
-            action_str = f"Tool Used: {tool_name} with params: {params}"
-            print(action_str)
-            history.append(f"Action: {tool_match.group(0)}") # Append the original XML action
-
-            if not tool_function:
-                observation = f"Error: Tool '{tool_name}' not found."
-            else:
-                try:
-                    observation = tool_function(**params)
-                except Exception as e:
-                    observation = f"Error executing tool '{tool_name}': {e}"
-
-            print(f"Observation: {observation}")
-            history.append(f"Observation: {observation}")
-
-        print("--- Max iterations reached. Halting. ---")
-        return "Agent stopped after reaching max iterations."
+        return "Orchestration complete. Blueprint generated."

@@ -2,7 +2,7 @@ import yaml
 import argparse
 from src.usage import UsageTracker
 from src.model_manager import ModelManager
-from src.agents import ManagerAgent
+from src.agents import OrchestratorAgent
 
 USAGE_FILE = "usage.json"
 
@@ -18,9 +18,9 @@ def main():
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
-    manager_agent = ManagerAgent(model_manager)
+    orchestrator_agent = OrchestratorAgent(model_manager)
 
-    result = manager_agent.run(args.task)
+    result = orchestrator_agent.run(args.task)
 
     print("\n--- Task Result ---")
     print(result)

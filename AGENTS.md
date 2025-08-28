@@ -61,10 +61,13 @@ The development of the Sybil project will follow a phased approach, as recommend
     -   [x] Handle model selection and API-specific parameter management.
     -   [x] Integrate multiple providers (Anthropic, Google, Cohere, Mistral).
 
--   **Phase 4: Enhance with Iterative Refinement (Future)**
-    -   [ ] Implement more sophisticated feedback loops (e.g., self-consistency).
-    -   [ ] Add long-term memory management for multi-session projects.
-    -   [ ] Explore multi-agent collaboration frameworks.
+-   **Phase 4: Enhance with Iterative Refinement (In Progress)**
+    -   [ ] **Multi-Agent "Software Team" Architecture**: Implement a collaborative system of specialized agents that mimic a real-world software development team.
+        -   **`SoftwareArchitectAgent`**: Decomposes high-level user requests into a detailed technical blueprint, including file structure, dependencies, and a sequence of implementation tasks.
+        -   **`DeveloperAgent`**: Executes the individual tasks from the blueprint using a strict TDD workflow.
+        -   **`ReviewerAgent`**: Reviews the `DeveloperAgent`'s code for correctness, style, and adherence to the architect's plan.
+        -   **`OrchestratorAgent`**: Manages the end-to-end workflow, passing tasks and feedback between the other agents in a "consistency loop" until the code is approved.
+    -   [ ] **Long-Term Memory**: Add a mechanism for storing and retrieving information across multiple sessions to handle long-running, complex software projects.
 
 ## III. Task Tracker
 
@@ -93,6 +96,11 @@ This section tracks the project's tasks and their status.
 -   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
 
 ### Next Tasks
+
+#### Phase 4: Multi-Agent Architecture
+-   [x] **Implement `SoftwareArchitectAgent`**: Created the new `SoftwareArchitectAgent` class and updated the main orchestrator to call it to generate a project blueprint.
+-   [In Progress] **Implement `DeveloperAgent` and `ReviewerAgent`**: Create the agents responsible for coding and reviewing.
+-   [ ] **Implement Orchestrator**: Refactor the main control loop to manage the interactions between the new architect, developer, and reviewer agents.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

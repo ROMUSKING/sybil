@@ -45,10 +45,13 @@ class ModelManager:
             output_tokens = response.usage.completion_tokens
             content = response.choices[0].message.content
 
+            cost = litellm.completion_cost(completion_response=response)
+
             self.usage_tracker.record_usage(
-                "litellm", friendly_model_name, input_tokens, output_tokens
+                "litellm", friendly_model_name, input_tokens, output_tokens, cost
             )
 
+            logger.info("Received response from model", extra={"model_name": friendly_model_name, "cost": cost})
             return content
 
         except Exception as e:

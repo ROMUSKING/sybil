@@ -9,22 +9,25 @@ class UsageTracker:
         if self.persistence_file and os.path.exists(self.persistence_file):
             self.load_from_file()
 
-    def record_usage(self, provider, model, input_tokens, output_tokens):
+    def record_usage(self, provider, model, input_tokens, output_tokens, cost):
         if provider not in self.usage_data:
             self.usage_data[provider] = {}
         if model not in self.usage_data[provider]:
             self.usage_data[provider][model] = {
                 "total_input_tokens": 0,
                 "total_output_tokens": 0,
+                "total_cost": 0.0,
                 "requests": []
             }
 
         self.usage_data[provider][model]["total_input_tokens"] += input_tokens
         self.usage_data[provider][model]["total_output_tokens"] += output_tokens
+        self.usage_data[provider][model]["total_cost"] += cost
         self.usage_data[provider][model]["requests"].append({
             "timestamp": datetime.datetime.now().isoformat(),
             "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "output_tokens": output_tokens,
+            "cost": cost
         })
 
         if self.persistence_file:

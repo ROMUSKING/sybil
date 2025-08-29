@@ -38,3 +38,6 @@ __pycache__/
 
 # Usage data
 usage.json
+
+# Config file
+config.yaml

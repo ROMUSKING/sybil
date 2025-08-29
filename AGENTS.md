@@ -67,7 +67,7 @@ The development of the Sybil project will follow a phased approach, as recommend
         -   **`OrchestratorAgent`**: Traverses the blueprint's dependency graph, orchestrating the workflow between other agents and providing them with the full contextual path (global, module, and task-specific context).
         -   **`DeveloperAgent`**: Executes a single task within the full context of its module and dependencies, following a strict TDD workflow.
         -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
-    -   [ ] **Long-Term Memory**: Add a mechanism for storing and retrieving information across multiple sessions to handle long-running, complex software projects.
+    -   [x] **Long-Term Memory**: Implemented a persistent memory system using LangGraph's checkpointing feature. Project state is automatically saved at each step, allowing for sessions to be resumed. A file-based checkpointer (`FileCheckpointer`) stores session data in the `.checkpoints/langgraph/` directory.
 
 -   **Phase 5: Hybrid Model Management with LiteLLM (Complete)**
     -   [x] **Implement Hybrid Provider Strategy**: Refactored the entire model management system to use `litellm` as a unified interface. This architecture supports both direct API calls to providers and proxied calls through services like OpenRouter, Together AI, etc.

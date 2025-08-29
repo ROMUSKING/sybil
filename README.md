@@ -19,6 +19,10 @@ Sybil is a polyagentic (multi-agent) software development framework designed to 
     ```
 
 3.  **Configure API Keys:**
+    -   Create a copy of the example configuration file:
+        ```bash
+        cp config.yaml.example config.yaml
+        ```
     -   Open `config.yaml` and add your API keys for the desired LLM providers.
 
     ```yaml

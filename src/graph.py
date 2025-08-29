@@ -1,14 +1,36 @@
 import xml.etree.ElementTree as ET
+from typing import Optional
+import time
+import functools
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import StateGraph, END
 from src.graph_state import GraphState
 from src.logger import logger
+from src.agents import Agent
 
 class AgentGraph:
-    def __init__(self, architect, developer, reviewer):
+    def __init__(self, architect, developer, reviewer, checkpointer: Optional[BaseCheckpointSaver] = None):
         self.architect = architect
         self.developer = developer
         self.reviewer = reviewer
+        self.checkpointer = checkpointer
+        self.performance_data = {}
         self.graph = self._build_graph()
+
+    def _timed_agent_run(self, agent: Agent, state: GraphState):
+        agent_name = agent.__class__.__name__
+        start_time = time.time()
+        result = agent.run(state)
+        end_time = time.time()
+        duration = round(end_time - start_time, 2)
+        if agent_name not in self.performance_data:
+            self.performance_data[agent_name] = []
+        self.performance_data[agent_name].append(duration)
+        logger.info(f"Agent {agent_name} took {duration}s")
+        return result
+
+    def get_performance_report(self):
+        return self.performance_data
 
     def _parse_blueprint(self, blueprint_xml: str):
         # This logic is copied from the old OrchestratorAgent
@@ -83,11 +105,11 @@ class AgentGraph:
         workflow = StateGraph(GraphState)
 
         # Nodes
-        workflow.add_node("architect", self.architect.run)
+        workflow.add_node("architect", functools.partial(self._timed_agent_run, self.architect))
         workflow.add_node("prepare_tasks", self._prepare_task_queue)
         workflow.add_node("select_task", self._select_next_task)
-        workflow.add_node("developer", self.developer.run)
-        workflow.add_node("reviewer", self.reviewer.run)
+        workflow.add_node("developer", functools.partial(self._timed_agent_run, self.developer))
+        workflow.add_node("reviewer", functools.partial(self._timed_agent_run, self.reviewer))
         workflow.add_node("handle_error", self._handle_error)
 
         # Edges
@@ -126,19 +148,15 @@ class AgentGraph:
 
         workflow.add_edge("handle_error", END)
 
-        return workflow.compile()
+        return workflow.compile(checkpointer=self.checkpointer)
 
-    def run(self, initial_request: str):
-        logger.info("Starting graph execution")
-        initial_state = GraphState(
-            initial_request=initial_request,
-            blueprint_xml=None,
-            task_queue=[],
-            current_task=None,
-            current_files=None,
-            review_feedback=None,
-            error=None
-        )
-        final_state = self.graph.invoke(initial_state)
-        logger.info("Graph execution finished")
+    def run(self, initial_request: str, session_id: str):
+        logger.info("Starting graph execution", extra={"session_id": session_id})
+        config = {"configurable": {"thread_id": session_id}}
+
+        # The initial state is now managed by the checkpointer
+        initial_payload = {"initial_request": initial_request}
+
+        final_state = self.graph.invoke(initial_payload, config)
+        logger.info("Graph execution finished", extra={"session_id": session_id})
         return final_state

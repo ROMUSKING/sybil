@@ -2,3 +2,5 @@ PyYAML
 openai
 pytest
 litellm
+langgraph
+langchain-core

@@ -3,9 +3,7 @@
 api_keys:
   openai: "YOUR_OPENAI_KEY"
   anthropic: "YOUR_ANTHROPIC_KEY"
-  openrouter: "YOUR_OPENROUTER_KEY"
-  # Add other providers or proxies here, e.g.:
-  # together_ai: "YOUR_TOGETHER_AI_KEY"
+  huggingface: "YOUR_HUGGINGFACE_KEY"
 
 # This section maps a friendly, user-defined name to the specific
 # model string that LiteLLM requires.
@@ -16,30 +14,18 @@ models:
   "claude-opus-direct":
     litellm_model_name: "claude-3-opus-20240229"
 
-  # --- OpenRouter Proxied Models ---
-  "openrouter-mixtral":
-    litellm_model_name: "openrouter/mistralai/mixtral-8x7b-instruct"
-  "openrouter-kimi-free":
-    litellm_model_name: "openrouter/moonshotai/kimi-k2:free"
-  "openrouter-llama-free":
-    litellm_model_name: "openrouter/nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
-  "openrouter-qwen-coder-free":
-    litellm_model_name: "openrouter/qwen/qwen3-coder-480b-a35b:free"
-  "openrouter-deepseek-free":
-    litellm_model_name: "openrouter/deepseek/r1:free"
-  "openrouter-claude-opus":
-    litellm_model_name: "openrouter/anthropic/claude-3-opus"
-  "openrouter-gemini-pro":
-    litellm_model_name: "openrouter/google/gemini-1.5-pro"
-  "openrouter-command-r-plus":
-    litellm_model_name: "openrouter/cohere/command-r-plus"
-  "openrouter-gpt-4o":
-    litellm_model_name: "openrouter/openai/gpt-4o"
+  # --- Hugging Face Models ---
+  "hf-deepseek":
+    litellm_model_name: "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai"
+  "hf-qwen-coder":
+    litellm_model_name: "huggingface/Qwen/Qwen2.5-Coder-32B-Instruct:fireworks-ai"
+  "hf-mistral-small":
+    litellm_model_name: "huggingface/mistralai/Mistral-Small-24B-Instruct-2501:fireworks-ai"
 
 
 # Assign a friendly model name to each agent role. The ModelManager will
 # handle routing it to the correct provider based on the 'models' mapping.
 agent_models:
-  architect: "openrouter-llama-free"
-  developer: "openrouter-qwen-coder-free"
-  reviewer: "openrouter-deepseek-free"
+  architect: "hf-deepseek"
+  developer: "hf-qwen-coder"
+  reviewer: "hf-mistral-small"

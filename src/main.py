@@ -4,9 +4,7 @@ import time
 import uuid
 from src.usage import UsageTracker
 from src.model_manager import ModelManager
-from src.agents import SoftwareArchitectAgent, DeveloperAgent, ReviewerAgent
-from src.graph import AgentGraph
-from src.persistance import FileCheckpointer
+from src.agents import OrchestratorAgent
 from src.logger import logger
 
 USAGE_FILE = "usage.json"
@@ -22,34 +20,24 @@ def main():
     parser.add_argument("--session-id", type=str, help="The session ID to resume a project. If not provided, a new session will be started.")
     args = parser.parse_args()
 
-    session_id = args.session_id or str(uuid.uuid4())
-
-    logger.info("Sybil starting.", extra={"task": args.task, "session_id": session_id})
+    logger.info("Sybil starting.", extra={"task": args.task, "session_id": args.session_id})
 
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
 
-    # Instantiate agents
-    architect = SoftwareArchitectAgent(model_manager)
-    developer = DeveloperAgent(model_manager)
-    reviewer = ReviewerAgent(model_manager)
+    # The OrchestratorAgent now encapsulates the entire workflow.
+    orchestrator = OrchestratorAgent(model_manager, config)
 
-    # Instantiate the checkpointer
-    checkpointer = FileCheckpointer()
-
-    # Instantiate the graph with the checkpointer
-    agent_graph = AgentGraph(architect, developer, reviewer, checkpointer)
-
-    result = agent_graph.run(args.task, session_id)
+    result = orchestrator.run(args.task, session_id=args.session_id)
 
     end_time = time.time()
     total_runtime = end_time - start_time
 
-    logger.info("Sybil finished.", extra={"task_result": result, "session_id": session_id})
+    logger.info("Sybil finished.", extra={"task_result": result})
 
     # --- Final Analytics Report ---
-    performance_report = agent_graph.get_performance_report()
+    performance_report = orchestrator.get_performance_report()
     final_usage = usage_tracker.usage_data
 
     # Calculate total cost

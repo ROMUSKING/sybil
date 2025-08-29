@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from src.model_manager import ModelManager
 from src.tools import ToolRegistry, tool_registry as global_tool_registry
 from src.logger import logger
+from src.graph_state import GraphState
 
 class Agent:
     """Base class for all agents."""
@@ -42,7 +43,8 @@ Example of a nested blueprint with dependencies:
   </module>
 </blueprint>"""
 
-    def run(self, task_description: str) -> str:
+    def run(self, state: GraphState) -> dict:
+        task_description = state['initial_request']
         logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
         prompt = self._create_system_prompt()
         full_prompt = f"{prompt}\n\nUser Request: {task_description}"
@@ -50,9 +52,10 @@ Example of a nested blueprint with dependencies:
         logger.info(f"Raw response from architect", extra={"response": raw_response})
         blueprint_match = re.search(r"<blueprint>.*</blueprint>", raw_response, re.DOTALL)
         if blueprint_match:
-            return blueprint_match.group(0)
-        logger.error("Could not generate a valid blueprint from architect response")
-        return "Error: Could not generate a valid blueprint."
+            return {"blueprint_xml": blueprint_match.group(0)}
+        else:
+            logger.error("Could not generate a valid blueprint from architect response")
+            return {"error": "Could not generate a valid blueprint."}
 
 class DeveloperAgent(Agent):
     """Writes code to implement a single task from the blueprint."""
@@ -77,10 +80,19 @@ class DeveloperAgent(Agent):
 When the tests pass and the task is complete, use the `<final_answer>` tag with the file paths you created or modified.
 """
 
-    def run(self, task_description: str, context: str) -> dict:
-        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
-        system_prompt = self._create_system_prompt(task_description, context)
-        history = [f"Starting development for task: {task_description}"]
+    def run(self, state: GraphState) -> dict:
+        task_description = state['current_task']['description']
+        context = state['current_task']['context']
+        feedback = state.get('review_feedback')
+
+        if feedback and feedback != "approved":
+            task_with_feedback = f"{task_description}\n\nPlease address the following feedback:\n{feedback}"
+        else:
+            task_with_feedback = task_description
+
+        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_with_feedback})
+        system_prompt = self._create_system_prompt(task_with_feedback, context)
+        history = [f"Starting development for task: {task_with_feedback}"]
 
         for i in range(self.max_iterations):
             prompt = "\n".join(history)
@@ -91,7 +103,7 @@ When the tests pass and the task is complete, use the `<final_answer>` tag with 
             if final_answer_match:
                 logger.info("DeveloperAgent finished task.", extra={"task": task_description})
                 files = re.findall(r"<file>(.*?)</file>", final_answer_match.group(1))
-                return {"status": "success", "files": files}
+                return {"current_files": files}
 
             tool_match = re.search(r"<tool>(.*?)</tool>", raw_response, re.DOTALL)
             if not tool_match:
@@ -114,7 +126,7 @@ When the tests pass and the task is complete, use the `<final_answer>` tag with 
             history.append(f"Observation: {observation}")
 
         logger.error("DeveloperAgent failed to complete task in max iterations", extra={"task": task_description})
-        return {"status": "failure", "reason": "Max iterations reached."}
+        return {"error": "Developer failed to complete task in max iterations."}
 
 class ReviewerAgent(Agent):
     """Reviews code for correctness, style, and adherence to the plan."""
@@ -133,16 +145,21 @@ class ReviewerAgent(Agent):
 Your final output must be a single XML block `<review><status>approved/rejected</status><comment>...</comment></review>`.
 """
 
-    def run(self, task_description: str, context: str, files: list[str]) -> dict:
+    def run(self, state: GraphState) -> dict:
+        task_description = state['current_task']['description']
+        context = state['current_task']['context']
+        files = state['current_files']
+
         logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
         files_content = ""
         for file_path in files:
             try:
+                # In a real scenario, you'd use a tool to read files
                 with open(file_path, 'r') as f: content = f.read()
                 files_content += f"\n--- {file_path} ---\n{content}\n"
             except Exception as e:
                 logger.error("Reviewer could not read file", extra={"file_path": file_path, "error": str(e)})
-                return {"status": "error", "comment": f"Could not read file {file_path}: {e}"}
+                return {"error": f"Could not read file {file_path}: {e}"}
 
         prompt = self._create_system_prompt(task_description, context, files_content)
         raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
@@ -151,102 +168,45 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         if review_match:
             status = re.search(r"<status>(.*?)</status>", review_match.group(1)).group(1).strip()
             comment = re.search(r"<comment>(.*?)</comment>", review_match.group(1)).group(1).strip()
-            return {"status": status, "comment": comment}
+            if status == "approved":
+                return {"review_feedback": "approved"}
+            else:
+                return {"review_feedback": comment}
 
         logger.error("Could not parse review from reviewer response", extra={"response": raw_response})
-        return {"status": "error", "comment": "Could not parse review."}
+        return {"error": "Could not parse review from reviewer response."}
 
+
+from src.graph import AgentGraph
 
 class OrchestratorAgent(Agent):
-    """Orchestrates the workflow between other specialized agents."""
+    """Orchestrates the workflow between other specialized agents using a state graph."""
     def __init__(self, model_manager: ModelManager, config: dict):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
-        self.performance_data = {}
         agent_models = config.get("agent_models", {})
-        self.architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
-        self.developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
-        self.reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
 
-    def _time_agent_run(self, agent, **kwargs):
-        start_time = time.time()
-        result = agent.run(**kwargs)
-        end_time = time.time()
-        duration = end_time - start_time
+        # Still need to instantiate agents to pass them to the graph
+        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
+        developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
+        reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
 
-        agent_name = agent.name
-        if agent_name not in self.performance_data:
-            self.performance_data[agent_name] = {"total_time": 0, "calls": 0}
-
-        self.performance_data[agent_name]["total_time"] += duration
-        self.performance_data[agent_name]["calls"] += 1
-
-        logger.info(f"Agent {agent_name} finished in {duration:.2f}s")
-        return result
+        self.agent_graph = AgentGraph(architect, developer, reviewer)
+        # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.
+        self.performance_data = {}
 
     def get_performance_report(self):
+        # This is now a stub. Real performance tracking would need a new implementation.
+        logger.warning("Performance tracking is not fully implemented in the new graph-based orchestrator.")
         return self.performance_data
-
-    def _parse_blueprint(self, blueprint_xml: str):
-        root = ET.fromstring(blueprint_xml)
-        graph, tasks_map = {}, {}
-        for module in root.findall('.//module'):
-            name = module.get('name')
-            if name not in graph: graph[name], tasks_map[name] = [], []
-            for dep in module.findall('./dependencies/dependency'): graph[name].append(dep.text)
-            for task in module.findall('./tasks/task'): tasks_map[name].append(task.get('description'))
-        return graph, tasks_map
-
-    def _topological_sort(self, graph):
-        sorted_modules, visited = [], set()
-        def visit(module):
-            if module in visited: return
-            visited.add(module)
-            for dep in graph.get(module, []): visit(dep)
-            sorted_modules.append(module)
-        for module in graph:
-            if module not in visited: visit(module)
-        return sorted_modules
 
     def run(self, task_description: str):
         logger.info("Orchestrator starting task.", extra={"task": task_description})
 
-        blueprint_xml = self._time_agent_run(self.architect, task_description=task_description)
-        logger.info("Blueprint received from Architect.", extra={"blueprint": blueprint_xml})
+        final_state = self.agent_graph.run(task_description)
 
-        try:
-            graph, tasks_map = self._parse_blueprint(blueprint_xml)
-            sorted_modules = self._topological_sort(graph)
-        except Exception as e:
-            logger.error("Failed to parse blueprint", extra={"error": str(e)})
-            return "Orchestration failed: Could not parse blueprint."
-
-        logger.info("Determined module execution order.", extra={"order": sorted_modules})
-        for module_name in sorted_modules:
-            logger.info(f"Starting module", extra={"module_name": module_name})
-            for task in tasks_map[module_name]:
-                max_retries, current_task_description = 3, task
-                for i in range(max_retries):
-                    logger.info(f"Attempt {i+1}/{max_retries} for task.", extra={"task": task})
-                    context = f"Module: {module_name}"
-
-                    dev_result = self._time_agent_run(self.developer, task_description=current_task_description, context=context)
-
-                    if dev_result.get("status") == "success":
-                        review_result = self._time_agent_run(self.reviewer, task_description=task, context=context, files=dev_result.get("files", []))
-
-                        if review_result.get("status") == "approved":
-                            logger.info("Task approved.", extra={"task": task})
-                            break
-                        else:
-                            feedback = review_result.get('comment', 'No comment provided.')
-                            logger.warning("Task rejected.", extra={"task": task, "feedback": feedback})
-                            current_task_description = f"{task}\n\nPlease address the following feedback:\n{feedback}"
-                    else:
-                        logger.error("Development failed for task.", extra={"task": task})
-                        return "Orchestration failed during development."
-                else:
-                    logger.error("Task failed after max retries.", extra={"task": task})
-                    return "Orchestration failed: Task could not be completed successfully."
+        if final_state.get("error"):
+            logger.error("Orchestration failed.", extra={"error": final_state["error"]})
+            return f"Orchestration failed: {final_state['error']}"
 
         logger.info("Orchestration complete.")
         return "Orchestration complete."

@@ -1,9 +1,12 @@
 import yaml
 import argparse
 import time
+import uuid
 from src.usage import UsageTracker
 from src.model_manager import ModelManager
-from src.agents import OrchestratorAgent
+from src.agents import SoftwareArchitectAgent, DeveloperAgent, ReviewerAgent
+from src.graph import AgentGraph
+from src.persistance import FileCheckpointer
 from src.logger import logger
 
 USAGE_FILE = "usage.json"
@@ -16,24 +19,37 @@ def main():
     start_time = time.time()
     parser = argparse.ArgumentParser(description="Sybil - A polyagentic software development tool.")
     parser.add_argument("task", type=str, help="The task for the agent to perform.")
+    parser.add_argument("--session-id", type=str, help="The session ID to resume a project. If not provided, a new session will be started.")
     args = parser.parse_args()
 
-    logger.info("Sybil starting.", extra={"task": args.task})
+    session_id = args.session_id or str(uuid.uuid4())
+
+    logger.info("Sybil starting.", extra={"task": args.task, "session_id": session_id})
 
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
-    orchestrator_agent = OrchestratorAgent(model_manager, config)
 
-    result = orchestrator_agent.run(args.task)
+    # Instantiate agents
+    architect = SoftwareArchitectAgent(model_manager)
+    developer = DeveloperAgent(model_manager)
+    reviewer = ReviewerAgent(model_manager)
+
+    # Instantiate the checkpointer
+    checkpointer = FileCheckpointer()
+
+    # Instantiate the graph with the checkpointer
+    agent_graph = AgentGraph(architect, developer, reviewer, checkpointer)
+
+    result = agent_graph.run(args.task, session_id)
 
     end_time = time.time()
     total_runtime = end_time - start_time
 
-    logger.info("Sybil finished.", extra={"task_result": result})
+    logger.info("Sybil finished.", extra={"task_result": result, "session_id": session_id})
 
     # --- Final Analytics Report ---
-    performance_report = orchestrator_agent.get_performance_report()
+    performance_report = agent_graph.get_performance_report()
     final_usage = usage_tracker.usage_data
 
     # Calculate total cost

@@ -13,12 +13,23 @@ Sybil is a polyagentic (multi-agent) software development framework designed to 
     cd sybil
     ```
 
-2.  **Install dependencies:**
+2.  **Create and activate a virtual environment (Optional but recommended):**
+    ```bash
+    # On macOS and Linux
+    python3 -m venv venv
+    source venv/bin/activate
+
+    # On Windows
+    # python -m venv venv
+    # .\venv\Scripts\activate
+    ```
+
+3.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Configure API Keys:**
+4.  **Configure API Keys:**
     -   Create a copy of the example configuration file:
         ```bash
         cp config.yaml.example config.yaml

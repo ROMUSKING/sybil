@@ -1,6 +1,8 @@
 import re
 import time
 import xml.etree.ElementTree as ET
+import uuid
+from typing import Optional
 from src.model_manager import ModelManager
 from src.tools import ToolRegistry, tool_registry as global_tool_registry
 from src.logger import logger
@@ -199,10 +201,15 @@ class OrchestratorAgent(Agent):
         logger.warning("Performance tracking is not fully implemented in the new graph-based orchestrator.")
         return self.performance_data
 
-    def run(self, task_description: str):
+    def run(self, task_description: str, session_id: Optional[str] = None):
         logger.info("Orchestrator starting task.", extra={"task": task_description})
 
-        final_state = self.agent_graph.run(task_description)
+        # If no session_id is provided, create a new one.
+        session_id = session_id or str(uuid.uuid4())
+        logger.info(f"Using session ID: {session_id}")
+
+
+        final_state = self.agent_graph.run(task_description, session_id)
 
         if final_state.get("error"):
             logger.error("Orchestration failed.", extra={"error": final_state["error"]})

@@ -15,6 +15,11 @@ class ModelManager:
             os.environ[env_var_name] = key
             logger.info(f"Set API key for {provider.upper()}", extra={"provider": provider})
 
+        # Explicitly set the OpenRouter API base if the key is present
+        if "openrouter" in api_keys:
+            os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
+            logger.info("Set API base for OpenRouter")
+
         litellm.telemetry = False
 
     def send_request(self, prompt: str, friendly_model_name: str) -> str:

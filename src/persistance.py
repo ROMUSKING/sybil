@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
 from langgraph.checkpoint.base import BaseCheckpointSaver, Checkpoint, CheckpointTuple
-from langgraph.serde.jsonplus import JsonPlusSerializer
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 class FileCheckpointer(BaseCheckpointSaver):
     def __init__(self, storage_dir: str = ".checkpoints/langgraph"):

@@ -2,6 +2,7 @@ import re
 import time
 import xml.etree.ElementTree as ET
 import uuid
+import random
 from typing import Optional
 from src.model_manager import ModelManager
 from src.tools import ToolRegistry, tool_registry as global_tool_registry
@@ -253,11 +254,30 @@ class OrchestratorAgent(Agent):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
         agent_models = config.get("agent_models", {})
 
-        # Still need to instantiate agents to pass them to the graph
-        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
-        developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
-        reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
-        documenter = DocumenterAgent(model_manager, agent_models.get("documenter"), global_tool_registry)
+        evaluation_mode = config.get("evaluation_mode", False)
+
+        def get_agent_model(role: str) -> str:
+            models_for_role = agent_models.get(role, [])
+            if not models_for_role:
+                raise ValueError(f"No models defined for agent role: {role}")
+
+            if evaluation_mode:
+                selected_model = random.choice(models_for_role)
+                logger.info(f"Evaluation mode: randomly selected model '{selected_model}' for role '{role}'.")
+                return selected_model
+            else:
+                return models_for_role[0]
+
+        # Instantiate agents with selected models
+        architect_model = get_agent_model("architect")
+        developer_model = get_agent_model("developer")
+        reviewer_model = get_agent_model("reviewer")
+        documenter_model = get_agent_model("documenter")
+
+        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, architect_model)
+        developer = DeveloperAgent(model_manager, developer_model, global_tool_registry)
+        reviewer = ReviewerAgent("ReviewerAgent", model_manager, reviewer_model)
+        documenter = DocumenterAgent(model_manager, documenter_model, global_tool_registry)
 
         self.agent_graph = AgentGraph(architect, developer, reviewer, documenter)
         # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.

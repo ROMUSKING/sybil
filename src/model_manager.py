@@ -33,30 +33,43 @@ class ModelManager:
             logger.error("'litellm_model_name' not defined for model", extra={"model_name": friendly_model_name})
             return f"Error: 'litellm_model_name' not defined for model '{friendly_model_name}'."
 
+        messages = [{"role": "user", "content": prompt}]
         logger.info(
-            "Sending request to model",
-            extra={"friendly_model_name": friendly_model_name, "litellm_model_name": litellm_model_name}
+            "Sending request to model via LiteLLM",
+            extra={
+                "friendly_model_name": friendly_model_name,
+                "litellm_model_name": litellm_model_name,
+                "messages": messages,
+            },
         )
 
         try:
-            messages = [{"role": "user", "content": prompt}]
+            kwargs = {
+                "model": litellm_model_name,
+                "messages": messages,
+            }
+            if "huggingface/" in litellm_model_name:
+                kwargs["api_base"] = "https://router.huggingface.co/v1"
 
-            response = litellm.completion(
-                model=litellm_model_name,
-                messages=messages
-            )
+            response = litellm.completion(**kwargs)
 
             input_tokens = response.usage.prompt_tokens
             output_tokens = response.usage.completion_tokens
             content = response.choices[0].message.content
-
             cost = litellm.completion_cost(completion_response=response)
 
             self.usage_tracker.record_usage(
                 "litellm", friendly_model_name, input_tokens, output_tokens, cost
             )
 
-            logger.info("Received response from model", extra={"model_name": friendly_model_name, "cost": cost})
+            logger.info(
+                "Received response from model",
+                extra={
+                    "model_name": friendly_model_name,
+                    "cost": cost,
+                    "response_content": content,
+                },
+            )
             return content
 
         except Exception as e:

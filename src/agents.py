@@ -122,9 +122,16 @@ When the tests pass and the task is complete, use the `<final_answer>` tag with 
 
             if not tool_function:
                 observation = f"Error: Tool '{tool_name}' not found."
+                logger.error("Tool not found", extra={"tool_name": tool_name})
             else:
-                try: observation = tool_function(**params)
-                except Exception as e: observation = f"Error executing tool '{tool_name}': {e}"
+                logger.info("DeveloperAgent is calling tool", extra={"tool_name": tool_name, "params": params})
+                try:
+                    observation = tool_function(**params)
+                except Exception as e:
+                    observation = f"Error executing tool '{tool_name}': {e}"
+                    logger.error("Error executing tool", extra={"tool_name": tool_name, "params": params, "error": str(e)})
+
+            logger.info("Tool observation", extra={"tool_name": tool_name, "observation": observation})
             history.append(f"Observation: {observation}")
 
         logger.error("DeveloperAgent failed to complete task in max iterations", extra={"task": task_description})
@@ -154,22 +161,26 @@ Your final output must be a single XML block `<review><status>approved/rejected<
 
         logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
         files_content = ""
+        read_file_tool = global_tool_registry.get_tool("read_file")
         for file_path in files:
-            try:
-                # In a real scenario, you'd use a tool to read files
-                with open(file_path, 'r') as f: content = f.read()
-                files_content += f"\n--- {file_path} ---\n{content}\n"
-            except Exception as e:
-                logger.error("Reviewer could not read file", extra={"file_path": file_path, "error": str(e)})
-                return {"error": f"Could not read file {file_path}: {e}"}
+            content = read_file_tool(file_path)
+            if "Error reading file" in content:
+                logger.error("Reviewer could not read file", extra={"file_path": file_path, "error": content})
+                return {"error": f"Could not read file {file_path}: {content}"}
+            files_content += f"\n--- {file_path} ---\n{content}\n"
 
         prompt = self._create_system_prompt(task_description, context, files_content)
         raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
 
         review_match = re.search(r"<review>(.*?)</review>", raw_response, re.DOTALL)
         if review_match:
-            status = re.search(r"<status>(.*?)</status>", review_match.group(1)).group(1).strip()
-            comment = re.search(r"<comment>(.*?)</comment>", review_match.group(1)).group(1).strip()
+            review_content = review_match.group(1)
+            status_match = re.search(r"<status>(.*?)</status>", review_content)
+            comment_match = re.search(r"<comment>(.*?)</comment>", review_content)
+
+            status = status_match.group(1).strip() if status_match else "rejected"
+            comment = comment_match.group(1).strip() if comment_match else "No comment provided."
+
             if status == "approved":
                 return {"review_feedback": "approved"}
             else:

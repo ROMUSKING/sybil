@@ -1,20 +1,23 @@
+# --- Evaluation Mode ---
+# If true, the orchestrator will randomly select a model for each agent from the lists below.
+# If false, it will use the first model in the list for each agent.
+# This can be overridden by the --evaluation-mode command-line flag.
+evaluation_mode: false
+
+# --- API Keys ---
 # Generic section for API keys. The key name (e.g., 'openai') should correspond
 # to the environment variable LiteLLM expects (e.g., OPENAI_API_KEY).
 api_keys:
   openai: "YOUR_OPENAI_KEY"
   anthropic: "YOUR_ANTHROPIC_KEY"
   huggingface: "YOUR_HUGGINGFACE_KEY"
+  # Add other provider keys here as needed, e.g., cohere, fireworks, etc.
 
+# --- Model Definitions ---
 # This section maps a friendly, user-defined name to the specific
 # model string that LiteLLM requires.
 models:
-  # --- Direct Provider Models ---
-  "gpt-4-direct":
-    litellm_model_name: "gpt-4"
-  "claude-opus-direct":
-    litellm_model_name: "claude-3-opus-20240229"
-
-  # --- Hugging Face Models ---
+  # --- Hugging Face Models (via Fireworks) ---
   "hf-deepseek":
     litellm_model_name: "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai"
   "hf-qwen-coder":
@@ -22,11 +25,33 @@ models:
   "hf-mistral-small":
     litellm_model_name: "huggingface/mistralai/Mistral-Small-24B-Instruct-2501:fireworks-ai"
 
+  # --- Other Provider Models ---
+  "nscale-gpt-oss":
+    litellm_model_name: "openai/gpt-oss-120b:nscale"
+  "hyperbolic-gpt-oss":
+    litellm_model_name: "openai/gpt-oss-120b:hyperbolic"
+  "featherless-kimi":
+    litellm_model_name: "moonshotai/Kimi-K2-Instruct:featherless-ai"
+  "featherless-gemma":
+    litellm_model_name: "burtenshaw/GemmaCoder3-12B:featherless-ai"
+  "hyperbolic-qwen":
+    litellm_model_name: "Qwen/Qwen3-Coder-480B-A35B-Instruct:hyperbolic"
+  "sambanova-qwq":
+    litellm_model_name: "Qwen/QwQ-32B:sambanova"
+  "cohere-command-a":
+    litellm_model_name: "CohereLabs/command-a-reasoning-08-2025:cohere"
 
-# Assign a friendly model name to each agent role. The ModelManager will
-# handle routing it to the correct provider based on the 'models' mapping.
+# --- Agent Model Assignments ---
+# Assign a list of friendly model names to each agent role.
 agent_models:
-  architect: "hf-deepseek"
-  developer: "hf-deepseek"
-  reviewer: "hf-deepseek"
-  documenter: "hf-deepseek"
+  architect:
+    - "hf-deepseek"
+  developer:
+    - "hf-deepseek"
+    - "featherless-gemma"
+    - "hyperbolic-qwen"
+  reviewer:
+    - "hf-deepseek"
+    - "cohere-command-a"
+  documenter:
+    - "hf-deepseek"

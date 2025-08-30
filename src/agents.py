@@ -11,10 +11,10 @@ from src.graph_state import GraphState
 
 class Agent:
     """Base class for all agents."""
-    def __init__(self, name: str, model_manager: ModelManager, model_name: str):
+    def __init__(self, name: str, model_manager: ModelManager, model_names: list[str]):
         self.name = name
         self.model_manager = model_manager
-        self.model_name = model_name
+        self.model_names = model_names
 
     def run(self, **kwargs):
         raise NotImplementedError
@@ -48,10 +48,10 @@ Example of a nested blueprint with dependencies:
 
     def run(self, state: GraphState) -> dict:
         task_description = state['initial_request']
-        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "models": self.model_names, "task": task_description})
         prompt = self._create_system_prompt()
         full_prompt = f"{prompt}\n\nUser Request: {task_description}"
-        raw_response = self.model_manager.send_request(full_prompt, friendly_model_name=self.model_name)
+        raw_response = self.model_manager.send_request(full_prompt, friendly_model_names=self.model_names)
         logger.info(f"Raw response from architect", extra={"response": raw_response})
         blueprint_match = re.search(r"<blueprint>.*</blueprint>", raw_response, re.DOTALL)
         if blueprint_match:
@@ -62,8 +62,8 @@ Example of a nested blueprint with dependencies:
 
 class DeveloperAgent(Agent):
     """Writes code to implement a single task from the blueprint."""
-    def __init__(self, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
-        super().__init__("DeveloperAgent", model_manager, model_name)
+    def __init__(self, model_manager: ModelManager, model_names: list[str], tool_registry: ToolRegistry):
+        super().__init__("DeveloperAgent", model_manager, model_names)
         self.tool_registry = tool_registry
         self.max_iterations = 10
 
@@ -93,14 +93,14 @@ When the tests pass and the task is complete, use the `<final_answer>` tag with 
         else:
             task_with_feedback = task_description
 
-        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_with_feedback})
+        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "models": self.model_names, "task": task_with_feedback})
         system_prompt = self._create_system_prompt(task_with_feedback, context)
         history = [f"Starting development for task: {task_with_feedback}"]
 
         for i in range(self.max_iterations):
             prompt = "\n".join(history)
             full_prompt = f"{system_prompt}\n\n{prompt}"
-            raw_response = self.model_manager.send_request(full_prompt, friendly_model_name=self.model_name)
+            raw_response = self.model_manager.send_request(full_prompt, friendly_model_names=self.model_names)
 
             final_answer_match = re.search(r"<final_answer>(.*?)</final_answer>", raw_response, re.DOTALL)
             if final_answer_match:
@@ -160,7 +160,7 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         context = state['current_task']['context']
         files = state['current_files']
 
-        logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+        logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "models": self.model_names, "task": task_description})
         files_content = ""
         read_file_tool = global_tool_registry.get_tool("read_file")
         for file_path in files:
@@ -171,7 +171,7 @@ Your final output must be a single XML block `<review><status>approved/rejected<
             files_content += f"\n--- {file_path} ---\n{content}\n"
 
         prompt = self._create_system_prompt(task_description, context, files_content)
-        raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+        raw_response = self.model_manager.send_request(prompt, friendly_model_names=self.model_names)
 
         review_match = re.search(r"<review>(.*?)</review>", raw_response, re.DOTALL)
         if review_match:
@@ -192,8 +192,8 @@ Your final output must be a single XML block `<review><status>approved/rejected<
 
 class DocumenterAgent(Agent):
     """Analyzes the completed session and updates documentation."""
-    def __init__(self, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
-        super().__init__("DocumenterAgent", model_manager, model_name)
+    def __init__(self, model_manager: ModelManager, model_names: list[str], tool_registry: ToolRegistry):
+        super().__init__("DocumenterAgent", model_manager, model_names)
         self.tool_registry = tool_registry
 
     def _create_system_prompt(self, session_summary: str, readme_content: str) -> str:
@@ -230,7 +230,7 @@ Your goal is to integrate the session summary into the README.md in a clear and 
 """
 
         prompt = self._create_system_prompt(session_summary, readme_content)
-        raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+        raw_response = self.model_manager.send_request(prompt, friendly_model_names=self.model_names)
 
         readme_match = re.search(r"<readme>(.*?)</readme>", raw_response, re.DOTALL)
         if readme_match:
@@ -254,30 +254,16 @@ class OrchestratorAgent(Agent):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
         agent_models = config.get("agent_models", {})
 
-        evaluation_mode = config.get("evaluation_mode", False)
+        # Pass the full list of models for each role to the agent constructor
+        architect_models = agent_models.get("architect", [])
+        developer_models = agent_models.get("developer", [])
+        reviewer_models = agent_models.get("reviewer", [])
+        documenter_models = agent_models.get("documenter", [])
 
-        def get_agent_model(role: str) -> str:
-            models_for_role = agent_models.get(role, [])
-            if not models_for_role:
-                raise ValueError(f"No models defined for agent role: {role}")
-
-            if evaluation_mode:
-                selected_model = random.choice(models_for_role)
-                logger.info(f"Evaluation mode: randomly selected model '{selected_model}' for role '{role}'.")
-                return selected_model
-            else:
-                return models_for_role[0]
-
-        # Instantiate agents with selected models
-        architect_model = get_agent_model("architect")
-        developer_model = get_agent_model("developer")
-        reviewer_model = get_agent_model("reviewer")
-        documenter_model = get_agent_model("documenter")
-
-        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, architect_model)
-        developer = DeveloperAgent(model_manager, developer_model, global_tool_registry)
-        reviewer = ReviewerAgent("ReviewerAgent", model_manager, reviewer_model)
-        documenter = DocumenterAgent(model_manager, documenter_model, global_tool_registry)
+        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, architect_models)
+        developer = DeveloperAgent(model_manager, developer_models, global_tool_registry)
+        reviewer = ReviewerAgent("ReviewerAgent", model_manager, reviewer_models)
+        documenter = DocumenterAgent(model_manager, documenter_models, global_tool_registry)
 
         self.agent_graph = AgentGraph(architect, developer, reviewer, documenter)
         # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.

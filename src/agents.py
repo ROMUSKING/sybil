@@ -189,6 +189,61 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         logger.error("Could not parse review from reviewer response", extra={"response": raw_response})
         return {"error": "Could not parse review from reviewer response."}
 
+class DocumenterAgent(Agent):
+    """Analyzes the completed session and updates documentation."""
+    def __init__(self, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
+        super().__init__("DocumenterAgent", model_manager, model_name)
+        self.tool_registry = tool_registry
+
+    def _create_system_prompt(self, session_summary: str, readme_content: str) -> str:
+        return f"""You are a DocumenterAgent. Your task is to update the project's README.md file based on a summary of the work completed in the most recent session.
+
+**Session Summary:**
+{session_summary}
+
+**Current README.md content:**
+```markdown
+{readme_content}
+```
+
+Your goal is to integrate the session summary into the README.md in a clear and concise way. You can add a new section, update an existing one, or simply append the summary. The final output must be the complete, updated content of the README.md file, enclosed in `<readme>` tags.
+"""
+
+    def run(self, state: GraphState) -> dict:
+        logger.info(f"{self.name} starting task.", extra={"agent_name": self.name})
+
+        read_file = self.tool_registry.get_tool("read_file")
+        write_file = self.tool_registry.get_tool("write_file")
+
+        readme_content = read_file("README.md")
+        if "Error reading file" in readme_content:
+            logger.error("Could not read README.md", extra={"error": readme_content})
+            return {"error": "Could not read README.md"}
+
+        # Create a summary of the session
+        session_summary = f"""
+- Initial Request: {state.get('initial_request')}
+- Blueprint: {state.get('blueprint_xml')}
+- Final Files: {state.get('current_files')}
+- Errors Encountered: {state.get('error')}
+"""
+
+        prompt = self._create_system_prompt(session_summary, readme_content)
+        raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+
+        readme_match = re.search(r"<readme>(.*?)</readme>", raw_response, re.DOTALL)
+        if readme_match:
+            new_readme_content = readme_match.group(1).strip()
+            result = write_file("README.md", new_readme_content)
+            if "Error writing to file" in result:
+                logger.error("Could not write to README.md", extra={"error": result})
+                return {"error": "Could not write to README.md"}
+            logger.info("README.md updated successfully.")
+            return {} # End of workflow
+        else:
+            logger.error("Could not parse new README content from response", extra={"response": raw_response})
+            return {"error": "Could not parse new README content."}
+
 
 from src.graph import AgentGraph
 
@@ -202,8 +257,9 @@ class OrchestratorAgent(Agent):
         architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
         developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
         reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
+        documenter = DocumenterAgent(model_manager, agent_models.get("documenter"), global_tool_registry)
 
-        self.agent_graph = AgentGraph(architect, developer, reviewer)
+        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter)
         # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.
         self.performance_data = {}
 

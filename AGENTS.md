@@ -144,3 +144,12 @@ All code should adhere to the following `tiger_style` contract for quality and r
 -   **Small, Focused Functions**: Prefer small, single-responsibility functions.
 -   **Error Handling**: Clearly handle errors and avoid using global mutable state.
 
+### Testing
+This project uses `pytest` for unit and integration testing.
+
+-   **Location**: All test files are located in the `tests/` directory.
+-   **Running Tests**: To run the full test suite, execute the following command from the root of the repository:
+    ```bash
+    python3 -m pytest tests/
+    ```
+-   **TDD Workflow**: The `DeveloperAgent` is designed to follow a Test-Driven Development (TDD) workflow. When given a task, it should first write a failing test that captures the requirements of the task, and then write the implementation code to make the test pass.

@@ -174,8 +174,13 @@ Your final output must be a single XML block `<review><status>approved/rejected<
 
         review_match = re.search(r"<review>(.*?)</review>", raw_response, re.DOTALL)
         if review_match:
-            status = re.search(r"<status>(.*?)</status>", review_match.group(1)).group(1).strip()
-            comment = re.search(r"<comment>(.*?)</comment>", review_match.group(1)).group(1).strip()
+            review_content = review_match.group(1)
+            status_match = re.search(r"<status>(.*?)</status>", review_content)
+            comment_match = re.search(r"<comment>(.*?)</comment>", review_content)
+
+            status = status_match.group(1).strip() if status_match else "rejected"
+            comment = comment_match.group(1).strip() if comment_match else "No comment provided."
+
             if status == "approved":
                 return {"review_feedback": "approved"}
             else:

@@ -44,10 +44,14 @@ class ModelManager:
         )
 
         try:
-            response = litellm.completion(
-                model=litellm_model_name,
-                messages=messages
-            )
+            kwargs = {
+                "model": litellm_model_name,
+                "messages": messages,
+            }
+            if "huggingface/" in litellm_model_name:
+                kwargs["api_base"] = "https://router.huggingface.co/v1"
+
+            response = litellm.completion(**kwargs)
 
             input_tokens = response.usage.prompt_tokens
             output_tokens = response.usage.completion_tokens

@@ -15,11 +15,6 @@ class ModelManager:
             os.environ[env_var_name] = key
             logger.info(f"Set API key for {provider.upper()}", extra={"provider": provider})
 
-        # Explicitly set the OpenRouter API base if the key is present
-        if "openrouter" in api_keys:
-            os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
-            logger.info("Set API base for OpenRouter")
-
         litellm.telemetry = False
 
     def send_request(self, prompt: str, friendly_model_name: str) -> str:
@@ -33,43 +28,30 @@ class ModelManager:
             logger.error("'litellm_model_name' not defined for model", extra={"model_name": friendly_model_name})
             return f"Error: 'litellm_model_name' not defined for model '{friendly_model_name}'."
 
-        messages = [{"role": "user", "content": prompt}]
         logger.info(
-            "Sending request to model via LiteLLM",
-            extra={
-                "friendly_model_name": friendly_model_name,
-                "litellm_model_name": litellm_model_name,
-                "messages": messages,
-            },
+            "Sending request to model",
+            extra={"friendly_model_name": friendly_model_name, "litellm_model_name": litellm_model_name}
         )
 
         try:
-            kwargs = {
-                "model": litellm_model_name,
-                "messages": messages,
-            }
-            if "huggingface/" in litellm_model_name:
-                kwargs["api_base"] = "https://router.huggingface.co/v1"
+            messages = [{"role": "user", "content": prompt}]
 
-            response = litellm.completion(**kwargs)
+            response = litellm.completion(
+                model=litellm_model_name,
+                messages=messages
+            )
 
             input_tokens = response.usage.prompt_tokens
             output_tokens = response.usage.completion_tokens
             content = response.choices[0].message.content
+
             cost = litellm.completion_cost(completion_response=response)
 
             self.usage_tracker.record_usage(
                 "litellm", friendly_model_name, input_tokens, output_tokens, cost
             )
 
-            logger.info(
-                "Received response from model",
-                extra={
-                    "model_name": friendly_model_name,
-                    "cost": cost,
-                    "response_content": content,
-                },
-            )
+            logger.info("Received response from model", extra={"model_name": friendly_model_name, "cost": cost})
             return content
 
         except Exception as e:

@@ -27,5 +27,5 @@ models:
 # handle routing it to the correct provider based on the 'models' mapping.
 agent_models:
   architect: "hf-deepseek"
-  developer: "hf-qwen-coder"
-  reviewer: "hf-mistral-small"
+  developer: "hf-deepseek"
+  reviewer: "hf-deepseek"

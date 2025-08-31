@@ -94,6 +94,19 @@ This ensures that no progress is lost and allows you to continue, review, or deb
 
 ## Development Log
 
+### Session: 2025-08-31
+
+**Summary:** Implemented automatic session persistence in configuration for seamless project resumption.
+
+**Key Features & Fixes:**
+-   **Session Persistence in Config:** Added a `session` section to `config.yaml` to automatically store and retrieve the current session ID. This eliminates the need to manually track session IDs for resuming projects.
+-   **Automatic Session Management:** The CLI now automatically resumes the last active session if no `--session-id` is provided, and creates new sessions when needed.
+-   **Manual Session Clearing:** Added `--clear-session` flag to manually clear the stored session ID.
+-   **Smart Config Updates:** Session IDs are only updated in config when automatically managed (not when manually specified), and cleared on successful completion or manually.
+
+**Issues Encountered:**
+-   No significant issues encountered during implementation. The feature integrates seamlessly with the existing LangGraph checkpointing system.
+
 ### Session: 2025-08-30
 
 **Summary:** This session focused on improving the robustness, observability, and feature set of the Sybil framework.

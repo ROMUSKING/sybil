@@ -68,7 +68,7 @@ The development of the Sybil project will follow a phased approach, as recommend
         -   **`DeveloperAgent`**: Executes a single task within the full context of its module and dependencies, following a strict TDD workflow.
         -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
         -   **`DocumenterAgent`**: Runs at the end of a successful session to automatically update documentation with a summary of the work done.
-    -   [x] **Long-Term Memory**: Implemented a persistent memory system using LangGraph's checkpointing feature. Project state is automatically saved at each step, allowing for sessions to be resumed. A file-based checkpointer (`FileCheckpointer`) stores session data in the `.checkpoints/langgraph/` directory.
+    -   [x] **Long-Term Memory**: Implemented a persistent memory system using LangGraph's checkpointing feature. Project state is automatically saved at each step, allowing for sessions to be resumed. A file-based checkpointer (`FileCheckpointer`) stores session data in the `.checkpoints/langgraph/` directory. Session IDs are now automatically stored in `config.yaml` for seamless resumption without manual ID tracking.
 
 -   **Phase 5: Hybrid Model Management with LiteLLM (Complete)**
     -   [x] **Implement Hybrid Provider Strategy**: Refactored the entire model management system to use `litellm` as a unified interface. This architecture supports both direct API calls to providers and proxied calls through services like OpenRouter, Together AI, etc.
@@ -115,13 +115,14 @@ This section tracks the project's tasks and their status.
 -   [x] **Quota Management**: Implemented the `ModelManager` to handle model switching based on different quota types (cost-based, RPM, monthly calls).
 -   [x] **Usage Persistence**: Implemented `UsageTracker` to persist usage data across sessions.
 -   [x] **Basic Agent Framework**: Created a base `Agent` class and a `ManagerAgent`.
--   [x] **CLI**: Built a simple command-line interface for user interaction.
+-   [x] **CLI**: Built a command-line interface for user interaction with options for session management (`--session-id`, `--clear-session`), verbose logging (`--verbose`), and task specification.
 -   [x] **Project Documentation**: Created this `AGENTS.md` file to guide development.
 -   [x] **ReAct Implementation**: Refactored the `ManagerAgent` to follow a `Thought -> Action -> Observation` loop and connected it to a tool registry.
 -   [x] **Short-Term Memory**: Implemented a history truncation mechanism in `ManagerAgent` to manage context window size.
 -   [x] **Test-Driven Development**: Added a `run_tests` tool and updated the agent's prompt to support a TDD workflow.
 -   [x] **Code-then-CoT**: Updated the agent's prompt to require final code answers to be in "Code-then-Chain-of-Thought" format.
 -   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
+-   [x] **Session Persistence in Config**: Implemented automatic storage of session-id in `config.yaml` for seamless session resumption. Added `--clear-session` flag for manual clearing, and automatic clearing on successful task completion.
 
 ### Next Tasks
 

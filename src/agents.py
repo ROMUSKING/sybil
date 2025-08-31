@@ -219,6 +219,7 @@ Based on the information above, write a short summary of the changes. The summar
 
 from src.graph import AgentGraph
 from src.performance import PerformanceTracker
+from src.persistance import FileCheckpointer
 
 class OrchestratorAgent(Agent):
     """Orchestrates the workflow between other specialized agents using a state graph."""
@@ -232,7 +233,8 @@ class OrchestratorAgent(Agent):
         reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer", []))
         documenter = DocumenterAgent("DocumenterAgent", model_manager, agent_models.get("documenter", []))
 
-        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter, performance_tracker)
+        self.checkpointer = FileCheckpointer()
+        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter, performance_tracker, self.checkpointer)
 
     def run(self, task_description: str, session_id: Optional[str] = None):
         logger.info("Orchestrator starting task.", extra={"task": task_description})

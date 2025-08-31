@@ -5,6 +5,13 @@ api_keys:
   huggingface: "YOUR_HUGGINGFACE_KEY"
   # Add other provider keys here as needed, e.g., cohere, fireworks, etc.
 
+# --- Session Management ---
+# Stores the current session ID for resuming sessions.
+# Set to null to start a new session.
+session:
+  current_session_id: null
+
+
 # --- Model Definitions ---
 # This section maps a friendly, user-defined name to the specific
 # model string that LiteLLM requires.

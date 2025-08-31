@@ -29,3 +29,4 @@ agent_models:
   architect: "hf-deepseek"
   developer: "hf-qwen-coder"
   reviewer: "hf-mistral-small"
+  documenter: "hf-deepseek"

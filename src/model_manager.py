@@ -4,9 +4,10 @@ from src.usage import UsageTracker
 from src.logger import logger
 
 class ModelManager:
-    def __init__(self, config, usage_tracker: UsageTracker):
+    def __init__(self, config, usage_tracker: UsageTracker, verbose: bool = False):
         self.config = config
         self.usage_tracker = usage_tracker
+        self.verbose = verbose
         self.models_map = self.config.get("models", {})
 
         api_keys = self.config.get("api_keys", {})
@@ -40,6 +41,10 @@ class ModelManager:
 
         try:
             messages = [{"role": "user", "content": prompt}]
+            if self.verbose:
+                print("--- Request ---")
+                print(prompt)
+                print("---------------")
 
             response = litellm.completion(
                 model=litellm_model_name,
@@ -49,6 +54,11 @@ class ModelManager:
             input_tokens = response.usage.prompt_tokens
             output_tokens = response.usage.completion_tokens
             content = response.choices[0].message.content
+
+            if self.verbose:
+                print("--- Response ---")
+                print(content)
+                print("----------------")
 
             cost = litellm.completion_cost(completion_response=response)
 

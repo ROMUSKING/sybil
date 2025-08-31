@@ -9,10 +9,11 @@ from src.logger import logger
 from src.agents import Agent
 
 class AgentGraph:
-    def __init__(self, architect, developer, reviewer, checkpointer: Optional[BaseCheckpointSaver] = None):
+    def __init__(self, architect, developer, reviewer, documenter, checkpointer: Optional[BaseCheckpointSaver] = None):
         self.architect = architect
         self.developer = developer
         self.reviewer = reviewer
+        self.documenter = documenter
         self.checkpointer = checkpointer
         self.performance_data = {}
         self.graph = self._build_graph()
@@ -82,7 +83,15 @@ class AgentGraph:
         next_task = task_queue.pop(0)
         logger.info("Next task selected", extra={"task": next_task['description']})
         # Reset feedback for the new task
-        return {"task_queue": task_queue, "current_task": next_task, "review_feedback": None}
+        return {"task_queue": task_queue, "current_task": next_task, "review_feedback": None, "current_files": []}
+
+    def _accumulate_files(self, state: GraphState):
+        current_files = state.get('current_files', [])
+        completed_files = state.get('completed_files', [])
+        if not completed_files:
+            completed_files = []
+        completed_files.extend(current_files)
+        return {"completed_files": completed_files}
 
     # Conditional edge logic
     def _should_continue(self, state: GraphState):
@@ -91,7 +100,7 @@ class AgentGraph:
         if state.get("review_feedback") == "approved":
             logger.info("Review approved. Checking for more tasks.")
             if not state['task_queue']:
-                return "end"
+                return "document"
             else:
                 return "continue"
         logger.warning("Review rejected. Returning to developer.")
@@ -109,7 +118,9 @@ class AgentGraph:
         workflow.add_node("prepare_tasks", self._prepare_task_queue)
         workflow.add_node("select_task", self._select_next_task)
         workflow.add_node("developer", functools.partial(self._timed_agent_run, self.developer))
+        workflow.add_node("accumulate_files", self._accumulate_files)
         workflow.add_node("reviewer", functools.partial(self._timed_agent_run, self.reviewer))
+        workflow.add_node("documenter", functools.partial(self._timed_agent_run, self.documenter))
         workflow.add_node("handle_error", self._handle_error)
 
         # Edges
@@ -133,7 +144,8 @@ class AgentGraph:
             {"developer": "developer", END: END}
         )
 
-        workflow.add_edge("developer", "reviewer")
+        workflow.add_edge("developer", "accumulate_files")
+        workflow.add_edge("accumulate_files", "reviewer")
 
         workflow.add_conditional_edges(
             "reviewer",
@@ -141,11 +153,12 @@ class AgentGraph:
             {
                 "continue": "select_task",
                 "retry": "developer",
-                "end": END,
+                "document": "documenter",
                 "error": "handle_error"
             }
         )
 
+        workflow.add_edge("documenter", END)
         workflow.add_edge("handle_error", END)
 
         return workflow.compile(checkpointer=self.checkpointer)

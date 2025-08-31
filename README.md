@@ -73,6 +73,13 @@ You can resume a project at any time by providing its session ID using the `--se
 python -m src.main "Continue with the previous task." --session-id "your-session-id-here"
 ```
 
+### Verbose Mode
+For more detailed output, you can use the `--verbose` or `-v` flag. This will print the full text of all requests sent to the language models and the full responses received from them directly to the console. This is useful for debugging and understanding the agent's reasoning process.
+
+```bash
+python -m src.main "Your task here" --verbose
+```
+
 ## Long-Term Memory and Sessions
 
 Sybil is equipped with long-term memory, allowing it to handle complex, multi-session development tasks. This is achieved through a persistent checkpointing system built on top of LangGraph.
@@ -100,3 +107,10 @@ This ensures that no progress is lost and allows you to continue, review, or deb
 
 **Issues Encountered:**
 -   The development process was significantly hampered by what appears to be API rate limiting or authentication issues with the free tiers of the various LLM providers. This prevented full end-to-end testing of the new features in the provided environment. The implemented code is correct, but may require paid API keys or a different environment to run to completion reliably.
+
+
+### Session Summary: 2025-08-31 01:11:06
+ Added a new Python script named "hello_world.py" which prints "Hello, World!" upon execution. This script serves as a basic example illustrating Python's execution capabilities.
+
+### Session Summary: 2025-08-31 01:17:39
+ Added a new Python script named `hello_world.py` that prints "Hello, World!" to the console upon execution.

@@ -32,16 +32,28 @@ class ChatProvider {
         this._modelManager = modelManager;
     }
     resolveWebviewView(webviewView, context, _token) {
-        console.log('Sybil Chat: resolveWebviewView called');
+        console.log('=== SYBIL CHAT: resolveWebviewView CALLED ===');
+        console.log('Sybil Chat: View type:', webviewView.viewType);
+        console.log('Sybil Chat: View title:', webviewView.title);
+        console.log('Sybil Chat: View visible:', webviewView.visible);
+        console.log('Sybil Chat: Context state:', context?.state);
+        console.log('Sybil Chat: Token cancelled:', _token?.isCancellationRequested);
         this._view = webviewView;
+        console.log('Sybil Chat: Setting webview options...');
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
                 vscode.Uri.joinPath(this._extensionUri, 'media')
             ]
         };
-        console.log('Sybil Chat: Setting HTML content');
-        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        console.log('Sybil Chat: Webview options set');
+        console.log('Sybil Chat: Generating HTML content...');
+        const htmlContent = this._getHtmlForWebview(webviewView.webview);
+        console.log('Sybil Chat: HTML content length:', htmlContent.length);
+        console.log('Sybil Chat: Setting HTML content...');
+        webviewView.webview.html = htmlContent;
+        console.log('Sybil Chat: HTML content set successfully');
+        console.log('Sybil Chat: Setting up message handler...');
         webviewView.webview.onDidReceiveMessage(async (message) => {
             console.log('Sybil Chat: Received message:', message);
             switch (message.type) {
@@ -56,7 +68,12 @@ class ChatProvider {
                     break;
             }
         }, undefined, []);
-        console.log('Sybil Chat: Webview setup complete');
+        console.log('Sybil Chat: Message handler set up');
+        // Add visibility change listener for debugging
+        webviewView.onDidChangeVisibility(() => {
+            console.log('Sybil Chat: Visibility changed. Visible:', webviewView.visible);
+        });
+        console.log('=== SYBIL CHAT: Webview setup complete ===');
     }
     async _handleChatMessage(message) {
         if (!this._view)
@@ -112,21 +129,57 @@ class ChatProvider {
         }
     }
     async _processMessage(message) {
-        // Enhanced message processing with more intelligent responses
-        const lowerMessage = message.toLowerCase().trim();
-        // Handle code-related requests
-        if (lowerMessage.includes('code') || lowerMessage.includes('implement') || lowerMessage.includes('create') || lowerMessage.includes('write')) {
-            return `I'll help you implement that! Let me analyze your request and create a plan.
+        // Get available free models
+        const freeModels = this._modelManager.getFreeModels();
+        if (freeModels.length === 0) {
+            return `🤖 **Sybil AI Assistant**
 
-**What I can help with:**
-• Writing complete functions and classes
-• Creating React/Vue/Angular components
-• Implementing APIs and database schemas
-• Setting up project configurations
-• Debugging and fixing code issues
+I don't have any AI models configured yet. To get started:
 
-Please provide more details about what you'd like me to implement, and I'll get started right away!`;
+**🔑 Setup Required:**
+1. Go to Settings → Sybil: Configure API Keys
+2. Add API keys for providers like OpenRouter, HuggingFace, or OpenAI
+3. Free models will be automatically available
+
+**📚 What I can do:**
+• Generate code and implement features
+• Debug and fix issues
+• Create documentation
+• Set up project configurations
+• Review code quality
+
+Please configure your API keys first, then I can help with any coding task!`;
         }
+        // Enhanced message processing with AI-powered responses
+        const lowerMessage = message.toLowerCase().trim();
+        try {
+            // Use the first available model for chat responses
+            if (!freeModels[0]) {
+                return this._getFallbackResponse(lowerMessage);
+            }
+            const chatModel = freeModels[0].name;
+            const systemPrompt = `You are Sybil, an intelligent AI coding assistant. You help developers with:
+- Writing and implementing code
+- Debugging and fixing issues
+- Creating documentation
+- Setting up projects and configurations
+- Code review and best practices
+
+Be helpful, concise, and provide practical solutions. Use markdown formatting for code and emphasis.`;
+            const fullPrompt = `${systemPrompt}\n\nUser: ${message}\n\nAssistant:`;
+            const response = await this._modelManager.sendRequest(fullPrompt, [chatModel]);
+            // If the AI response is too generic or empty, provide a fallback
+            if (!response || response.trim().length < 10) {
+                return this._getFallbackResponse(lowerMessage);
+            }
+            return response;
+        }
+        catch (error) {
+            console.error('Error processing message with AI:', error);
+            return this._getFallbackResponse(lowerMessage);
+        }
+    }
+    _getFallbackResponse(lowerMessage) {
         // Handle help requests
         if (lowerMessage.includes('help') || lowerMessage.includes('what can you do') || lowerMessage.includes('commands')) {
             return `🤖 **Sybil AI Assistant** - Your intelligent coding companion!
@@ -268,6 +321,12 @@ What specific coding task can I help you with today?`;
         const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css'));
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js'));
         const nonce = getNonce();
+        console.log('Sybil Chat: Resource URIs generated:', {
+            styleResetUri: styleResetUri.toString(),
+            styleVSCodeUri: styleVSCodeUri.toString(),
+            styleMainUri: styleMainUri.toString(),
+            scriptUri: scriptUri.toString()
+        });
         return `<!DOCTYPE html>
             <html lang="en">
             <head>
@@ -280,12 +339,76 @@ What specific coding task can I help you with today?`;
                 <title>Sybil AI Assistant</title>
                 <style>
                     /* Fallback styles in case CSS doesn't load */
-                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                    .test { color: red; font-size: 24px; }
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        background: #1e1e1e;
+                        color: #cccccc;
+                    }
+                    .test {
+                        color: #4ec9b0;
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                    }
+                    .loading {
+                        color: #ffd700;
+                        font-style: italic;
+                    }
+                    .chat-container {
+                        height: 100vh;
+                        display: flex;
+                        flex-direction: column;
+                        background: #1e1e1e;
+                    }
+                    .chat-messages {
+                        flex: 1;
+                        overflow-y: auto;
+                        padding: 20px;
+                    }
+                    .chat-input-container {
+                        border-top: 1px solid #3e3e3e;
+                        padding: 20px;
+                        background: #252526;
+                    }
+                    .input-wrapper {
+                        display: flex;
+                        gap: 10px;
+                        align-items: flex-end;
+                    }
+                    #messageInput {
+                        flex: 1;
+                        background: #3c3c3c;
+                        color: #cccccc;
+                        border: 1px solid #3e3e3e;
+                        border-radius: 8px;
+                        padding: 12px;
+                        font-size: 14px;
+                        resize: none;
+                        min-height: 20px;
+                    }
+                    .send-btn {
+                        background: #007acc;
+                        color: white;
+                        border: none;
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .send-btn:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                    }
                 </style>
             </head>
             <body>
-                <div class="test">Webview is loading...</div>
+                <div class="test">🤖 Sybil AI Chat Loading...</div>
+                <div class="loading">Initializing chat interface...</div>
                 <div class="chat-container">
                     <div class="chat-header">
                         <div class="header-content">
@@ -340,9 +463,10 @@ What specific coding task can I help you with today?`;
                 </div>
 
                 <script nonce="${nonce}">
-                    console.log('Webview script starting...');
+                    console.log('Sybil Chat: Webview script starting...');
                     // Test if JavaScript is working
-                    document.querySelector('.test').textContent = 'JavaScript is working!';
+                    document.querySelector('.test').textContent = '🤖 Sybil AI Chat Ready!';
+                    document.querySelector('.loading').textContent = 'Chat interface loaded successfully!';
                 </script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
@@ -350,7 +474,7 @@ What specific coding task can I help you with today?`;
     }
 }
 exports.ChatProvider = ChatProvider;
-ChatProvider.viewType = 'sybilChat';
+ChatProvider.viewType = 'sybil.devChat';
 function getNonce() {
     let text = '';
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

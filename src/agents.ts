@@ -156,17 +156,29 @@ Example of a nested blueprint with dependencies:
     }
 
     private async generateBlueprint(taskDescription: string): Promise<string> {
-        // This is a simplified implementation
-        // In a real scenario, this would use an AI model to generate the blueprint
-        const blueprint = `<blueprint>
-  <module name="Core">
+        const systemPrompt = this.getSystemPrompt();
+        const taskPrompt = this.getTaskPrompt();
+        const fullPrompt = `${systemPrompt}\n\n${taskPrompt}\n\nUser Request: ${taskDescription}`;
+
+        try {
+            // Get recommended models for architect
+            const recommendedModels = this.modelManager.getRecommendedModels();
+            const modelNames = recommendedModels.architect?.map(m => m.name) || ['or-gemini-flash'];
+
+            const response = await this.modelManager.sendRequest(fullPrompt, modelNames);
+            this.log('Blueprint generated successfully');
+            return response;
+        } catch (error) {
+            this.log(`Error generating blueprint: ${error}`);
+            // Fallback to simple blueprint if AI call fails
+            return `<blueprint>
+  <module name="Main">
     <tasks>
-      <task id="core-1" description="Implement the main functionality for: ${taskDescription}" />
+      <task id="main-1" description="Implement: ${taskDescription}" />
     </tasks>
   </module>
 </blueprint>`;
-
-        return blueprint;
+        }
     }
 }
 
@@ -222,24 +234,48 @@ You should:
     }
 
     private async implementTask(taskDescription: string, context: string): Promise<string[]> {
-        // This is a simplified implementation
-        // In a real scenario, this would use AI to generate code and tools to create files
+        const systemPrompt = this.getSystemPrompt();
+        const taskPrompt = this.getTaskPrompt();
+        const fullPrompt = `${systemPrompt}\n\n${taskPrompt}\n\nTask: ${taskDescription}\nContext: ${context}`;
 
-        // For demonstration, let's create a simple file
-        const fileName = `task_${Date.now()}.ts`;
-        const filePath = `src/${fileName}`;
+        try {
+            // Get recommended models for developer
+            const recommendedModels = this.modelManager.getRecommendedModels();
+            const modelNames = recommendedModels.developer?.map(m => m.name) || ['or-qwen-coder'];
 
-        const code = `// Implementation for: ${taskDescription}
+            const response = await this.modelManager.sendRequest(fullPrompt, modelNames);
+            this.log('Task implementation completed', { response: response.substring(0, 100) });
+
+            // Parse the response to extract file paths (this is a simple implementation)
+            const fileMatches = response.match(/`([^`]+\.ts)`/g) || response.match(/`([^`]+\.js)`/g) || [];
+            const files = fileMatches.map(match => match.replace(/`/g, ''));
+
+            if (files.length === 0) {
+                // Create a default file if no files were specified in the response
+                const fileName = `task_${Date.now()}.ts`;
+                const filePath = `src/${fileName}`;
+                await this.fileManager.createFile(filePath, response);
+                return [filePath];
+            }
+
+            return files;
+        } catch (error) {
+            this.log(`Error implementing task: ${error}`);
+            // Fallback to simple file creation
+            const fileName = `task_${Date.now()}.ts`;
+            const filePath = `src/${fileName}`;
+            const code = `// Implementation for: ${taskDescription}
 // Context: ${context}
 // Generated on: ${new Date().toISOString()}
+// Note: AI call failed, this is a fallback implementation
 
 export function implementTask() {
     console.log('Task implementation placeholder');
-}
-`;
-
-        await this.fileManager.createFile(filePath, code);
-        return [filePath];
+    return 'success';
+}`;
+            await this.fileManager.createFile(filePath, code);
+            return [filePath];
+        }
     }
 }
 
@@ -291,26 +327,55 @@ You should check for:
     }
 
     private async reviewCode(task: Task, files: string[]): Promise<string> {
-        // This is a simplified implementation
-        // In a real scenario, this would analyze the code quality
-
         if (files.length === 0) {
             return 'No files were created. Please implement the required functionality.';
         }
 
-        // Basic review - check if files exist and have content
+        // Read the content of all files
+        let codeContent = '';
         for (const filePath of files) {
             try {
                 const content = await this.fileManager.readFile(filePath);
-                if (!content || content.trim().length === 0) {
-                    return `File ${filePath} appears to be empty or incomplete.`;
-                }
+                codeContent += `\n\n--- File: ${filePath} ---\n${content}`;
             } catch (error) {
                 return `Could not read file ${filePath}: ${error}`;
             }
         }
 
-        return 'approved';
+        const systemPrompt = this.getSystemPrompt();
+        const taskPrompt = this.getTaskPrompt();
+        const fullPrompt = `${systemPrompt}\n\n${taskPrompt}\n\nTask: ${task.description}\n\nCode to review:${codeContent}`;
+
+        try {
+            // Get recommended models for reviewer
+            const recommendedModels = this.modelManager.getRecommendedModels();
+            const modelNames = recommendedModels.reviewer?.map(m => m.name) || ['hf-deepseek'];
+
+            const response = await this.modelManager.sendRequest(fullPrompt, modelNames);
+            this.log('Code review completed', { response: response.substring(0, 100) });
+
+            // Check if the response indicates approval
+            const lowerResponse = response.toLowerCase();
+            if (lowerResponse.includes('approved') || lowerResponse.includes('looks good') || lowerResponse.includes('no issues')) {
+                return 'approved';
+            }
+
+            return response;
+        } catch (error) {
+            this.log(`Error during AI review: ${error}`);
+            // Fallback to basic review
+            for (const filePath of files) {
+                try {
+                    const content = await this.fileManager.readFile(filePath);
+                    if (!content || content.trim().length === 0) {
+                        return `File ${filePath} appears to be empty or incomplete.`;
+                    }
+                } catch (error) {
+                    return `Could not read file ${filePath}: ${error}`;
+                }
+            }
+            return 'approved';
+        }
     }
 }
 
@@ -357,7 +422,56 @@ You should:
     }
 
     private async generateDocumentation(taskDescription: string, files: string[]): Promise<void> {
-        const summary = `## Development Summary: ${new Date().toISOString()}
+        const systemPrompt = this.getSystemPrompt();
+        const taskPrompt = this.getTaskPrompt();
+
+        let filesContent = '';
+        if (files.length > 0) {
+            filesContent = '\n\nFiles implemented:';
+            for (const filePath of files) {
+                try {
+                    const content = await this.fileManager.readFile(filePath);
+                    filesContent += `\n\n--- ${filePath} ---\n${content}`;
+                } catch (error) {
+                    filesContent += `\n\n--- ${filePath} ---\n[Could not read file: ${error}]`;
+                }
+            }
+        }
+
+        const fullPrompt = `${systemPrompt}\n\n${taskPrompt}\n\nTask: ${taskDescription}${filesContent}`;
+
+        try {
+            // Get recommended models for documenter
+            const recommendedModels = this.modelManager.getRecommendedModels();
+            const modelNames = recommendedModels.documenter?.map(m => m.name) || ['or-gemini-flash'];
+
+            const response = await this.modelManager.sendRequest(fullPrompt, modelNames);
+            this.log('Documentation generated successfully');
+
+            const summary = `## Development Summary: ${new Date().toISOString()}
+
+**Task:** ${taskDescription}
+**Files Modified/Created:** ${files.join(', ') || 'None'}
+**Status:** Completed
+
+${response}
+
+---
+`;
+
+            const readmePath = 'README.md';
+            try {
+                const existingContent = await this.fileManager.readFile(readmePath);
+                const updatedContent = existingContent + '\n\n' + summary;
+                await this.fileManager.writeFile(readmePath, updatedContent);
+            } catch (error) {
+                // If README doesn't exist, create it
+                await this.fileManager.createFile(readmePath, summary);
+            }
+        } catch (error) {
+            this.log(`Error generating AI documentation: ${error}`);
+            // Fallback to simple documentation
+            const summary = `## Development Summary: ${new Date().toISOString()}
 
 **Task:** ${taskDescription}
 **Files Modified/Created:** ${files.join(', ') || 'None'}
@@ -369,14 +483,15 @@ This task has been successfully implemented with the following changes:
 ---
 `;
 
-        const readmePath = 'README.md';
-        try {
-            const existingContent = await this.fileManager.readFile(readmePath);
-            const updatedContent = existingContent + '\n\n' + summary;
-            await this.fileManager.writeFile(readmePath, updatedContent);
-        } catch (error) {
-            // If README doesn't exist, create it
-            await this.fileManager.createFile(readmePath, summary);
+            const readmePath = 'README.md';
+            try {
+                const existingContent = await this.fileManager.readFile(readmePath);
+                const updatedContent = existingContent + '\n\n' + summary;
+                await this.fileManager.writeFile(readmePath, updatedContent);
+            } catch (error) {
+                // If README doesn't exist, create it
+                await this.fileManager.createFile(readmePath, summary);
+            }
         }
     }
 }

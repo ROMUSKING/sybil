@@ -1,8 +1,9 @@
 {
-    "name": "sybil-ai-coding-agent",
-    "displayName": "Sybil AI Coding Agent",
+    "name": "sybil-dev-workspace",
+    "displayName": "Sybil AI Coding Agent (Workspace Dev)",
     "description": "A polyagentic AI coding assistant for VS Code, providing automated software development capabilities",
-    "version": "0.1.0",
+    "version": "0.1.1",
+    "publisher": "sybil-ai",
     "engines": {
         "vscode": "^1.74.0"
     },
@@ -20,11 +21,11 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:sybil.startTask",
-        "onCommand:sybil.resumeSession",
-        "onCommand:sybil.clearSession",
-        "onCommand:sybil.showAnalytics",
-        "onView:sybilChat"
+        "onCommand:sybil.devStartTask",
+        "onCommand:sybil.devResumeSession",
+        "onCommand:sybil.devClearSession",
+        "onCommand:sybil.devShowAnalytics",
+        "onView:sybil-dev-chat-container"
     ],
     "repository": {
         "type": "git",
@@ -33,57 +34,55 @@
     "contributes": {
         "commands": [
             {
-                "command": "sybil.startTask",
-                "title": "Sybil: Start New Task",
+                "command": "sybil.devStartTask",
+                "title": "Sybil: Start New Task (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.resumeSession",
-                "title": "Sybil: Resume Session",
+                "command": "sybil.devResumeSession",
+                "title": "Sybil: Resume Session (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.clearSession",
-                "title": "Sybil: Clear Session",
+                "command": "sybil.devClearSession",
+                "title": "Sybil: Clear Session (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.showAnalytics",
-                "title": "Sybil: Show Analytics",
+                "command": "sybil.devShowAnalytics",
+                "title": "Sybil: Show Analytics (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.configureModels",
-                "title": "Sybil: Configure API Keys",
+                "command": "sybil.devConfigureModels",
+                "title": "Sybil: Configure API Keys (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.showModelStats",
-                "title": "Sybil: Show Model Statistics",
+                "command": "sybil.devShowModelStats",
+                "title": "Sybil: Show Model Statistics (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.validateModels",
-                "title": "Sybil: Validate Models",
+                "command": "sybil.devValidateModels",
+                "title": "Sybil: Validate Models (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.openChat",
-                "title": "Sybil: Open Chat",
+                "command": "sybil.devOpenChat",
+                "title": "Sybil: Open Chat (Dev)",
                 "category": "Sybil"
             },
             {
-                "command": "sybil.toggleChat",
-                "title": "Sybil: Toggle Chat",
-                "category": "Sybil",
-                "key": "ctrl+shift+s",
-                "mac": "cmd+shift+s"
+                "command": "sybil.devTestWebview",
+                "title": "Sybil: Test Webview (Dev)",
+                "category": "Sybil"
             }
         ],
         "configuration": {
-            "title": "Sybil AI Coding Agent",
+            "title": "Sybil AI Coding Agent (Dev)",
             "properties": {
-                "sybil.apiKeys": {
+                "sybil.dev.apiKeys": {
                     "type": "object",
                     "description": "API keys for LLM providers (stored securely)",
                     "properties": {
@@ -109,7 +108,7 @@
                         }
                     }
                 },
-                "sybil.models": {
+                "sybil.dev.models": {
                     "type": "object",
                     "description": "Model configurations for each provider",
                     "properties": {
@@ -335,7 +334,7 @@
                         }
                     }
                 },
-                "sybil.agentPrompts": {
+                "sybil.dev.agentPrompts": {
                     "type": "object",
                     "description": "Customizable prompts for each agent type",
                     "properties": {
@@ -405,48 +404,48 @@
                         }
                     }
                 },
-                "sybil.pythonPath": {
+                "sybil.dev.pythonPath": {
                     "type": "string",
                     "default": "python3",
                     "description": "Path to Python executable for backend"
                 },
-                "sybil.backendPath": {
+                "sybil.dev.backendPath": {
                     "type": "string",
                     "description": "Path to Sybil Python backend"
                 },
-                "sybil.verbose": {
+                "sybil.dev.verbose": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable verbose logging"
                 },
-                "sybil.maxConcurrentTasks": {
+                "sybil.dev.maxConcurrentTasks": {
                     "type": "number",
                     "default": 3,
                     "minimum": 1,
                     "maximum": 10,
                     "description": "Maximum number of concurrent tasks"
                 },
-                "sybil.sessionTimeout": {
+                "sybil.dev.sessionTimeout": {
                     "type": "number",
                     "default": 3600000,
                     "description": "Session timeout in milliseconds (1 hour)"
                 },
-                "sybil.enableAnalytics": {
+                "sybil.dev.enableAnalytics": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable analytics collection"
                 },
-                "sybil.enableDebugIntegration": {
+                "sybil.dev.enableDebugIntegration": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable debug session integration"
                 },
-                "sybil.enableTerminalIntegration": {
+                "sybil.dev.enableTerminalIntegration": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable terminal integration"
                 },
-                "sybil.outputChannelLevel": {
+                "sybil.dev.outputChannelLevel": {
                     "type": "string",
                     "enum": [
                         "error",
@@ -457,12 +456,12 @@
                     "default": "info",
                     "description": "Logging level for output channel"
                 },
-                "sybil.autoSaveFiles": {
+                "sybil.dev.autoSaveFiles": {
                     "type": "boolean",
                     "default": true,
                     "description": "Automatically save files after modifications"
                 },
-                "sybil.confirmDestructiveActions": {
+                "sybil.dev.confirmDestructiveActions": {
                     "type": "boolean",
                     "default": true,
                     "description": "Require confirmation for destructive actions"
@@ -472,8 +471,8 @@
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "sybilChatContainer",
-                    "title": "Sybil Chat",
+                    "id": "sybil-dev-chat-container",
+                    "title": "Sybil Chat (Dev)",
                     "icon": "$(comment-discussion)"
                 }
             ]
@@ -481,15 +480,15 @@
         "views": {
             "explorer": [
                 {
-                    "id": "sybilSessions",
-                    "name": "Sybil Sessions",
+                    "id": "sybil.devSessions",
+                    "name": "Sybil Sessions (Dev)",
                     "icon": "$(robot)"
                 }
             ],
-            "sybilChatContainer": [
+            "sybil-dev-chat-container": [
                 {
-                    "id": "sybilChat",
-                    "name": "Chat",
+                    "id": "sybil.devChat",
+                    "name": "Chat (Dev)",
                     "icon": "$(comment-discussion)"
                 }
             ]
@@ -497,8 +496,8 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "sybil.startTask",
-                    "when": "view == sybilSessions",
+                    "command": "sybil.devStartTask",
+                    "when": "view == sybil.devSessions",
                     "group": "navigation"
                 }
             ]

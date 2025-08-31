@@ -79,6 +79,31 @@
                 "echo": true,
                 "focus": false
             }
+        },
+        {
+            "label": "Watch Tests",
+            "type": "npm",
+            "script": "test:watch",
+            "group": "test",
+            "presentation": {
+                "panel": "shared",
+                "reveal": "always",
+                "echo": true,
+                "focus": false
+            },
+            "isBackground": true
+        },
+        {
+            "label": "Test API Connections",
+            "type": "npm",
+            "script": "test:api",
+            "group": "test",
+            "presentation": {
+                "panel": "shared",
+                "reveal": "always",
+                "echo": true,
+                "focus": false
+            }
         }
     ]
 }

@@ -107,7 +107,7 @@ class AgentCoordinator {
             const { graph, tasksMap } = await this.parseBlueprint(state.blueprint_xml);
             const tasks = [];
             for (const moduleName in tasksMap) {
-                if (tasksMap.hasOwnProperty(moduleName)) {
+                if (Object.prototype.hasOwnProperty.call(tasksMap, moduleName)) {
                     const moduleTasks = tasksMap[moduleName];
                     tasks.push(...moduleTasks.map((task) => ({
                         description: task.description,

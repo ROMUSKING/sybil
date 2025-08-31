@@ -163,7 +163,7 @@ export class SybilAgent {
     }
 
     private getPythonPath(): string {
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         return config.get('pythonPath', 'python3');
     }
 

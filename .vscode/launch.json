@@ -68,34 +68,15 @@
             "trace": true
         },
         {
-            "name": "Debug Python Backend",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/../src/main.py",
-            "cwd": "${workspaceFolder}/..",
-            "python": "${config:sybil.pythonPath}",
-            "args": [
-                "--debug"
-            ],
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/.."
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            }
-        },
-        {
             "name": "Extension Tests",
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/test/**/*.js"
             ],
             "preLaunchTask": "${workspaceFolder}:watch",
             "presentation": {
@@ -113,7 +94,33 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/test/**/*.js"
+            ],
+            "preLaunchTask": "${workspaceFolder}:watch",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "internalConsoleOptions": "openOnSessionStart",
+            "sourceMaps": true,
+            "smartStep": true,
+            "trace": true
+        },
+        {
+            "name": "Debug Extension (Inspector)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--inspect-extensions=9229"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

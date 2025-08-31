@@ -134,7 +134,7 @@ export abstract class Agent {
 
     protected sanitizeInput(input: string): string {
         // Remove potentially harmful content or escape special characters
-        return input.replace(/[<>\"'&]/g, (match) => {
+        return input.replace(/[<>"'&]/g, (match) => {
             const entityMap: { [key: string]: string } = {
                 '<': '&lt;',
                 '>': '&gt;',

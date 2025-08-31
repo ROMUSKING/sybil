@@ -163,7 +163,7 @@ export class AgentCoordinator {
             const tasks: Task[] = [];
 
             for (const moduleName in tasksMap) {
-                if (tasksMap.hasOwnProperty(moduleName)) {
+                if (Object.prototype.hasOwnProperty.call(tasksMap, moduleName)) {
                     const moduleTasks = tasksMap[moduleName];
                     tasks.push(...moduleTasks.map((task: any) => ({
                         description: task.description,

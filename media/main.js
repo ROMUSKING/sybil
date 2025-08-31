@@ -22,6 +22,12 @@
         charCount: !!charCount
     });
 
+    // Check if critical elements exist
+    if (!messageInput || !sendButton || !chatMessages) {
+        console.error('Sybil Chat: Critical DOM elements missing!');
+        return;
+    }
+
     let chatHistory = [];
 
     // Initialize

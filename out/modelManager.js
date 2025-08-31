@@ -35,7 +35,7 @@ class ModelManager {
     }
     initializeProviders() {
         // Load models from configuration instead of hardcoded values
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         const modelsConfig = config.get('models', {});
         // OpenRouter configuration
         const openRouterModels = [];
@@ -155,7 +155,7 @@ class ModelManager {
         this.providers.set('huggingface', huggingFaceConfig);
     }
     loadAgentPrompts() {
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         const promptsConfig = config.get('agentPrompts', {});
         // Load configured prompts or use defaults
         const defaultPrompts = {
@@ -268,7 +268,7 @@ class ModelManager {
      * Get API key for a provider (maps provider names correctly)
      */
     getApiKey(providerName) {
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         const apiKeys = config.get('apiKeys', {});
         // Map provider names to API key names
         const keyMapping = {
@@ -283,7 +283,7 @@ class ModelManager {
      * Set API key for a provider
      */
     async setApiKey(providerName, apiKey) {
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         const apiKeys = config.get('apiKeys', {});
         // Map provider names to API key names
         const keyMapping = {
@@ -413,10 +413,75 @@ class ModelManager {
     async updateAgentPrompt(agentType, prompts) {
         this.agentPrompts.set(agentType, prompts);
         // Optionally persist to configuration
-        const config = vscode.workspace.getConfiguration('sybil');
+        const config = vscode.workspace.getConfiguration('sybil.dev');
         const currentPrompts = config.get('agentPrompts', {});
         currentPrompts[agentType] = prompts;
         await config.update('agentPrompts', currentPrompts, vscode.ConfigurationTarget.Global);
+    }
+    /**
+     * Send a request to AI models with fallback support
+     */
+    async sendRequest(prompt, friendlyModelNames) {
+        if (!friendlyModelNames.length) {
+            console.error('No models provided to sendRequest');
+            return 'Error: No models provided.';
+        }
+        // Get the first available model that has a valid API key
+        let selectedModel;
+        let selectedProvider;
+        for (const modelName of friendlyModelNames) {
+            const model = this.getModelByName(modelName);
+            if (model && this.hasValidApiKey(model.provider)) {
+                selectedModel = model;
+                selectedProvider = model.provider;
+                break;
+            }
+        }
+        if (!selectedModel || !selectedProvider) {
+            return `Error: No valid models available. Please configure API keys for: ${friendlyModelNames.join(', ')}`;
+        }
+        try {
+            // For now, return a mock response since we don't have the full HTTP implementation
+            // In a production environment, this would make actual API calls
+            console.log(`Would send request to ${selectedModel.name} (${selectedProvider})`);
+            // Mock response based on prompt content
+            const lowerPrompt = prompt.toLowerCase();
+            if (lowerPrompt.includes('architect') || lowerPrompt.includes('blueprint')) {
+                return `<blueprint>
+  <module name="Main">
+    <tasks>
+      <task id="task-1" description="Implement the requested functionality" />
+    </tasks>
+  </module>
+</blueprint>`;
+            }
+            if (lowerPrompt.includes('code') || lowerPrompt.includes('implement')) {
+                return `// Implementation for your request
+export function exampleFunction() {
+    console.log('This is a placeholder implementation');
+    return 'success';
+}`;
+            }
+            if (lowerPrompt.includes('review')) {
+                return 'approved';
+            }
+            if (lowerPrompt.includes('document')) {
+                return `# Documentation
+
+## Overview
+This is a placeholder documentation response.
+
+## Implementation
+The requested functionality has been implemented according to best practices.`;
+            }
+            return `I've processed your request: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"
+
+This is a mock response. To get real AI responses, please ensure your API keys are properly configured and the HTTP client is implemented.`;
+        }
+        catch (error) {
+            console.error('Error in sendRequest:', error);
+            return `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`;
+        }
     }
     /**
      * Get model statistics

@@ -100,7 +100,7 @@ class Agent {
     }
     sanitizeInput(input) {
         // Remove potentially harmful content or escape special characters
-        return input.replace(/[<>\"'&]/g, (match) => {
+        return input.replace(/[<>"'&]/g, (match) => {
             const entityMap = {
                 '<': '&lt;',
                 '>': '&gt;',

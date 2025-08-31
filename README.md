@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sybil VS Code Extension
 
 A powerfu### System Re- ✅ **User-Configurable Models**: Customize model strings and configurations through VS Code settings
@@ -1283,3 +1284,5 @@ npx vsce package
 # Lint code
 npm run lint
 ```
+=======
+>>>>>>> c2f44788ad0e9f92134febff13e1b43f5d7e9f77

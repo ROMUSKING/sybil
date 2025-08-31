@@ -1,22 +1,62 @@
-out/
-node_modules/
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Usage data
+usage.json
+performance.yaml
+
+# Config file
+config.yaml
+
+# VS Code Extension
+ext/out/
+ext/node_modules/
+ext/*.vsix
+ext/.vscode/settings.json
+
+# Build artifacts
 *.vsix
 .DS_Store
-.vscode-test/
-*.log
 
-test_api_standalone.js
-test_api_standalone.js.map
-test_api_standalone.ts
 
-# API Keys and sensitive data
-.env
-.env.local
-.env.production
-.env.development
-config.local.json
-secrets.json
-*.key
-*.pem
+test_api_connections.ts
+test_api_connections.js
+test_api_connections.js.map
 
-config.yaml
+test_api_connections.ts
+test_api_connections.js

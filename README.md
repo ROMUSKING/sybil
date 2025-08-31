@@ -88,6 +88,7 @@ Sybil is equipped with long-term memory, allowing it to handle complex, multi-se
 - **Sessions**: Every project is treated as a session, identified by a unique session ID. When you start a new task without specifying a session ID, a new one is created.
 - **Checkpointing**: The entire state of the project is automatically saved at every step of the development process. These checkpoints are stored on disk.
 - **Resuming**: When you provide a session ID, Sybil loads the latest checkpoint for that session and seamlessly resumes the workflow.
+- **Performance Tracking**: Agent performance data is tracked and stored in `performance.yaml`. This file is created automatically on the first run and updated on subsequent runs.
 
 This ensures that no progress is lost and allows you to continue, review, or debug long-running projects over multiple interactions. Checkpoints are stored in the `.checkpoints/langgraph/` directory.
 
@@ -99,7 +100,7 @@ This ensures that no progress is lost and allows you to continue, review, or deb
 
 **Key Features & Fixes:**
 -   **Structured Logging:** Replaced all `print()` statements with a structured JSON logger for better observability and machine-readability.
--   **API Resilience:** Implemented a model fallback mechanism in the `ModelManager`. If an API call to a model fails, `litellm` will automatically try the next model in the list for that agent's role.
+-   **API Resilience & Model Fallback:** The `ModelManager` now supports model fallbacks. You can assign a list of models to each agent role in `config.yaml`. If the primary model fails, `litellm` will automatically fall back to the next model in the list, ensuring a higher success rate for API calls.
 -   **Evaluation Mode:** Added a new `--evaluation-mode` flag. When enabled, this mode will rotate through the available models for each agent, allowing for testing and comparison of different providers.
 -   **Documenter Agent:** A new `DocumenterAgent` was added to the workflow. Its purpose is to run at the end of a successful session and automatically update this `README.md` with a summary of the work done.
 -   **Expanded Model Support:** Added a wide range of new models from Hugging Face and OpenRouter to the configuration.
@@ -107,10 +108,3 @@ This ensures that no progress is lost and allows you to continue, review, or deb
 
 **Issues Encountered:**
 -   The development process was significantly hampered by what appears to be API rate limiting or authentication issues with the free tiers of the various LLM providers. This prevented full end-to-end testing of the new features in the provided environment. The implemented code is correct, but may require paid API keys or a different environment to run to completion reliably.
-
-
-### Session Summary: 2025-08-31 01:11:06
- Added a new Python script named "hello_world.py" which prints "Hello, World!" upon execution. This script serves as a basic example illustrating Python's execution capabilities.
-
-### Session Summary: 2025-08-31 01:17:39
- Added a new Python script named `hello_world.py` that prints "Hello, World!" to the console upon execution.

@@ -3,8 +3,10 @@
 api_keys:
   openai: "YOUR_OPENAI_KEY"
   anthropic: "YOUR_ANTHROPIC_KEY"
-  huggingface: "YOUR_HUGGINGFACE_KEY"
+  openrouter: "YOUR_OPENROUTER_KEY"
+  # Add other provider keys here as needed, e.g., cohere, fireworks, etc.
 
+# --- Model Definitions ---
 # This section maps a friendly, user-defined name to the specific
 # model string that LiteLLM requires.
 models:
@@ -20,13 +22,40 @@ models:
   "hf-qwen-coder":
     litellm_model_name: "huggingface/Qwen/Qwen2.5-Coder-32B-Instruct:fireworks-ai"
   "hf-mistral-small":
-    litellm_model_name: "huggingface/mistralai/Mistral-Small-24B-Instruct-2501:fireworks-ai"
+    litellm_model_name: "huggingface/mistralai/Mistral-Small-24B-Instruct-2501"
+  "nscale-gpt-oss":
+    litellm_model_name: "huggingface/openai/gpt-oss-120b:nscale"
+  "hyperbolic-gpt-oss":
+    litellm_model_name: "huggingface/openai/gpt-oss-120b:hyperbolic"
+  "featherless-kimi":
+    litellm_model_name: "huggingface/moonshotai/Kimi-K2-Instruct:featherless-ai"
+  "featherless-gemma":
+    litellm_model_name: "huggingface/burtenshaw/GemmaCoder3-12B:featherless-ai"
+  "hyperbolic-qwen":
+    litellm_model_name: "huggingface/Qwen/Qwen3-Coder-480B-A35B-Instruct:hyperbolic"
+  "sambanova-qwq":
+    litellm_model_name: "huggingface/Qwen/QwQ-32B:sambanova"
+  "cohere-command-a":
+    litellm_model_name: "huggingface/CohereLabs/command-a-reasoning-08-2025:cohere"
 
+  # --- OpenRouter Models ---
+  "or-gemini-flash":
+    litellm_model_name: "openrouter/google/gemini-2.0-flash-exp:free"
 
-# Assign a friendly model name to each agent role. The ModelManager will
-# handle routing it to the correct provider based on the 'models' mapping.
+# --- Agent Model Assignments ---
+# Assign a list of friendly model names to each agent role.
+# The ModelManager will try them in order, falling back to the next on failure.
 agent_models:
-  architect: "hf-deepseek"
-  developer: "hf-qwen-coder"
-  reviewer: "hf-mistral-small"
-  documenter: "hf-deepseek"
+  architect:
+    - "hf-deepseek"
+    - "or-gemini-flash"
+  developer:
+    - "hf-deepseek"
+    - "featherless-gemma"
+    - "hyperbolic-qwen"
+    - "or-gemini-flash"
+  reviewer:
+    - "hf-deepseek"
+    - "cohere-command-a"
+  documenter:
+    - "hf-deepseek"

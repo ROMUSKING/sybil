@@ -10,10 +10,10 @@ from src.graph_state import GraphState
 
 class Agent:
     """Base class for all agents."""
-    def __init__(self, name: str, model_manager: ModelManager, model_name: str):
+    def __init__(self, name: str, model_manager: ModelManager, model_names: list[str]):
         self.name = name
         self.model_manager = model_manager
-        self.model_name = model_name
+        self.model_names = model_names
 
     def run(self, **kwargs):
         raise NotImplementedError
@@ -47,10 +47,10 @@ Example of a nested blueprint with dependencies:
 
     def run(self, state: GraphState) -> dict:
         task_description = state['initial_request']
-        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_names": self.model_names, "task": task_description})
         prompt = self._create_system_prompt()
         full_prompt = f"{prompt}\n\nUser Request: {task_description}"
-        raw_response = self.model_manager.send_request(full_prompt, friendly_model_name=self.model_name)
+        raw_response = self.model_manager.send_request(full_prompt, friendly_model_names=self.model_names)
         logger.info(f"Raw response from architect", extra={"response": raw_response})
         blueprint_match = re.search(r"<blueprint>.*</blueprint>", raw_response, re.DOTALL)
         if blueprint_match:
@@ -61,8 +61,8 @@ Example of a nested blueprint with dependencies:
 
 class DeveloperAgent(Agent):
     """Writes code to implement a single task from the blueprint."""
-    def __init__(self, model_manager: ModelManager, model_name: str, tool_registry: ToolRegistry):
-        super().__init__("DeveloperAgent", model_manager, model_name)
+    def __init__(self, model_manager: ModelManager, model_names: list[str], tool_registry: ToolRegistry):
+        super().__init__("DeveloperAgent", model_manager, model_names)
         self.tool_registry = tool_registry
         self.max_iterations = 10
 
@@ -92,14 +92,14 @@ When the tests pass and the task is complete, use the `<final_answer>` tag with 
         else:
             task_with_feedback = task_description
 
-        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_with_feedback})
+        logger.info(f"{self.name} starting task", extra={"agent_name": self.name, "model_names": self.model_names, "task": task_with_feedback})
         system_prompt = self._create_system_prompt(task_with_feedback, context)
         history = [f"Starting development for task: {task_with_feedback}"]
 
         for i in range(self.max_iterations):
             prompt = "\n".join(history)
             full_prompt = f"{system_prompt}\n\n{prompt}"
-            raw_response = self.model_manager.send_request(full_prompt, friendly_model_name=self.model_name)
+            raw_response = self.model_manager.send_request(full_prompt, friendly_model_names=self.model_names)
 
             final_answer_match = re.search(r"<final_answer>(.*?)</final_answer>", raw_response, re.DOTALL)
             if final_answer_match:
@@ -152,7 +152,7 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         context = state['current_task']['context']
         files = state['current_files']
 
-        logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+        logger.info(f"{self.name} starting review", extra={"agent_name": self.name, "model_names": self.model_names, "task": task_description})
         files_content = ""
         for file_path in files:
             try:
@@ -164,7 +164,7 @@ Your final output must be a single XML block `<review><status>approved/rejected<
                 return {"error": f"Could not read file {file_path}: {e}"}
 
         prompt = self._create_system_prompt(task_description, context, files_content)
-        raw_response = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+        raw_response = self.model_manager.send_request(prompt, friendly_model_names=self.model_names)
 
         review_match = re.search(r"<review>(.*?)</review>", raw_response, re.DOTALL)
         if review_match:
@@ -201,10 +201,10 @@ Based on the information above, write a short summary of the changes. The summar
         task_description = state['initial_request']
         files = state.get('completed_files', [])
 
-        logger.info(f"{self.name} starting documentation", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+        logger.info(f"{self.name} starting documentation", extra={"agent_name": self.name, "model_names": self.model_names, "task": task_description})
 
         prompt = self._create_system_prompt(task_description, files)
-        summary = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+        summary = self.model_manager.send_request(prompt, friendly_model_names=self.model_names)
 
         try:
             with open("README.md", "a") as f:
@@ -218,27 +218,21 @@ Based on the information above, write a short summary of the changes. The summar
         return {}
 
 from src.graph import AgentGraph
+from src.performance import PerformanceTracker
 
 class OrchestratorAgent(Agent):
     """Orchestrates the workflow between other specialized agents using a state graph."""
-    def __init__(self, model_manager: ModelManager, config: dict):
+    def __init__(self, model_manager: ModelManager, config: dict, performance_tracker: PerformanceTracker):
         super().__init__("OrchestratorAgent", model_manager, "n/a")
         agent_models = config.get("agent_models", {})
 
         # Still need to instantiate agents to pass them to the graph
-        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
-        developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
-        reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
-        documenter = DocumenterAgent("DocumenterAgent", model_manager, agent_models.get("documenter"))
+        architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect", []))
+        developer = DeveloperAgent(model_manager, agent_models.get("developer", []), global_tool_registry)
+        reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer", []))
+        documenter = DocumenterAgent("DocumenterAgent", model_manager, agent_models.get("documenter", []))
 
-        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter)
-        # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.
-        self.performance_data = {}
-
-    def get_performance_report(self):
-        # This is now a stub. Real performance tracking would need a new implementation.
-        logger.warning("Performance tracking is not fully implemented in the new graph-based orchestrator.")
-        return self.performance_data
+        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter, performance_tracker)
 
     def run(self, task_description: str, session_id: Optional[str] = None):
         logger.info("Orchestrator starting task.", extra={"task": task_description})

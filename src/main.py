@@ -18,16 +18,11 @@ def main():
     parser = argparse.ArgumentParser(description="Sybil - A polyagentic software development tool.")
     parser.add_argument("task", type=str, help="The task for the agent to perform.")
     parser.add_argument("--session-id", type=str, help="The session ID to resume a project. If not provided, a new session will be started.")
-    parser.add_argument("--evaluation-mode", action="store_true", help="Enable evaluation mode to rotate through models for each agent role.")
     args = parser.parse_args()
 
+    logger.info("Sybil starting.", extra={"task": args.task, "session_id": args.session_id})
+
     config = load_config()
-    # Override config with command-line flag if present
-    if args.evaluation_mode:
-        config['evaluation_mode'] = True
-
-    logger.info("Sybil starting.", extra={"task": args.task, "session_id": args.session_id, "evaluation_mode": config.get('evaluation_mode')})
-
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
     model_manager = ModelManager(config, usage_tracker)
 

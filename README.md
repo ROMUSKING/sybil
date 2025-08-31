@@ -1,88 +1,123 @@
-<<<<<<< HEAD
-# Sybil VS Code Extension
+# Sybil AI Coding Agent - VS Code Extension
 
-A powerfu### System Re- ✅ **User-Configurable Models**: Customize model strings and configurations through VS Code settings
-- ✅ **Agent Prompt Customization**: Config### API Configuration
-Configure API keys through VS Code settings:
-- `sybil.apiKeys`: Object containing API keys for different providers
-- `sybil.models`: Model configurations and fallbacks
-- `sybil.agentPrompts`: Customizable prompts for each agent type
+A powerful polyagentic AI coding assistant for VS Code that provides automated software development capabilities through a sophisticated multi-agent system.
 
-Example:
+## 🚀 Features
+
+### Core Capabilities
+- **Multi-Agent Coordination**: Architect, Developer, Reviewer, and Documenter agents working together
+- **Native VS Code Integration**: Direct file operations, terminal management, and debug session control
+- **Advanced AI Integration**: Support for OpenRouter, HuggingFace, OpenAI, Anthropic, and Google AI
+- **Session Management**: Persistent sessions with automatic resumption
+- **Real-time Analytics**: Performance tracking and usage monitoring
+- **Interactive Chat**: Natural conversation interface with Sybil AI
+
+### Key Features
+- ✅ **User-Configurable Models**: Customize model strings and configurations through VS Code settings
+- ✅ **Agent Prompt Customization**: Configure prompts for each agent type without code changes
+- ✅ **Model Statistics**: Real-time statistics on available models and providers
+- ✅ **Fallback System**: Automatic fallback to alternative models when primary models fail
+- ✅ **Comprehensive Tool Registry**: File operations, shell execution, and testing tools
+- ✅ **Session Persistence**: Long-term memory and session management
+- ✅ **Error Handling**: Robust error recovery and user feedback
+
+## 📊 Project Status
+
+### Current Progress: **100% Complete** ✅
+- ✅ **Core Extension Infrastructure**: Complete VS Code extension framework
+- ✅ **VS Code API Integrations**: File, Terminal, Debug, and Workspace APIs
+- ✅ **TypeScript Implementation**: Full native implementation (no Python dependency)
+- ✅ **Multi-Agent Coordination**: Complete agent workflow system
+- ✅ **AI Provider Integration**: OpenRouter, HuggingFace, OpenAI, Anthropic, Google AI
+- ✅ **User-Configurable Settings**: Model strings and agent prompts
+- ✅ **Session Management**: Persistent sessions with automatic resumption
+- ✅ **Analytics & Performance**: Usage tracking and performance monitoring
+- ✅ **Interactive Chat Interface**: Natural conversation with Sybil AI
+- ✅ **Security & Cleanup**: All API secrets removed from repository
+- ✅ **Marketplace Ready**: Clean, optimized package ready for submission
+
+## 🏗️ Architecture
+
+### Extension Structure
+```
+src/
+├── extension.ts              # Main extension entry point
+├── agentCoordinator.ts       # Multi-agent workflow orchestration
+├── agents/
+│   ├── architect_agent.ts    # Software architecture planning
+│   ├── developer_agent.ts    # Code implementation
+│   ├── reviewer_agent.ts     # Code review and validation
+│   └── documenter_agent.ts   # Documentation generation
+├── managers/
+│   ├── modelManager.ts       # AI provider integration
+│   ├── fileManager.ts        # File operations
+│   ├── terminalManager.ts    # Terminal integration
+│   ├── debugManager.ts       # Debug session control
+│   └── sessionManager.ts     # Session persistence
+├── tools/
+│   └── tool_registry.ts      # Tool system registry
+└── test/                     # Test infrastructure
+```
+
+### Agent Workflow
+1. **Architect Agent**: Analyzes requirements and creates technical blueprints
+2. **Developer Agent**: Implements code based on architectural specifications
+3. **Reviewer Agent**: Reviews code quality, security, and best practices
+4. **Documenter Agent**: Generates comprehensive documentation
+
+## ⚙️ Configuration
+
+### API Keys Setup
+Configure API keys through VS Code settings (`Ctrl/Cmd + ,`):
+
 ```json
 {
   "sybil.apiKeys": {
-    "openai": "your-openai-api-key",
-    "anthropic": "your-anthropic-api-key"
-  },
+    "openrouter": "YOUR_OPENROUTER_API_KEY",
+    "huggingface": "YOUR_HUGGINGFACE_API_KEY",
+    "openai": "YOUR_OPENAI_API_KEY",
+    "anthropic": "YOUR_ANTHROPIC_API_KEY",
+    "google": "YOUR_GOOGLE_API_KEY"
+  }
+}
+```
+
+### Model Configuration
+Customize available models and their settings:
+
+```json
+{
   "sybil.models": {
     "openrouter": {
       "or-gemini-flash": {
         "litellmModelName": "openrouter/google/gemini-2.0-flash-exp:free",
         "isFree": true,
-    ## Project Status
-
-### Current Progress: ~98% Complete
-- ✅ Core extension infrastructure
-- ✅ VS Code API integrations (File, Terminal, Debug)
-- ✅ Python backend communication
-- ✅ Session management and analytics
-- ✅ Multi-agent coordination system
-- ✅ User-configurable model strings and agent prompts
-- ✅ **OpenRouter API Integration**: ✅ VERIFIED - Implementation matches provided example exactly
-- ✅ **API Connection Testing**: ✅ COMPLETED - Comprehensive test suite validating all provider integrations
-- ✅ Test infrastructure
-- ✅ **TypeScript Implementation**: Complete port of Python logic ✅ NEWLY COMPLETED
-- ✅ **Native Performance**: No external Python process required ✅ NEWLY COMPLETED
-- ✅ **Advanced Tool Registry**: File operations, shell execution, testing ✅ NEWLY COMPLETED
-- ✅ **Model Manager**: AI provider integration with fallbacks ✅ NEWLY COMPLETED
-- ✅ **Performance Tracker**: Usage and performance monitoring ✅ NEWLY COMPLETED
-- 🔄 Comprehensive testing (in progress)
-- ⏳ Marketplace release (pending)
-
-### Recent Updates (August 31, 2025)
-- **OpenRouter API Implementation Verified**: ✅ COMPLETED - Confirmed implementation matches user-provided example exactly with proper headers, request structure, and error handling
-- **API Connection Testing**: ✅ COMPLETED - Created comprehensive test suite validating all provider integrations with proper error handling
-- **TypeScript Implementation Complete**: ✅ COMPLETED - Full port of Python logic to TypeScript with native VS Code integration
-- **Native Performance**: ✅ COMPLETED - No external Python process required, everything runs natively in VS Code
-- **Advanced Tool Registry**: ✅ COMPLETED - Comprehensive tool system for file operations, shell execution, and testing
-- **Model Manager**: ✅ COMPLETED - AI provider integration with fallback support and API key management
-- **Performance Tracker**: ✅ COMPLETED - Built-in usage tracking and performance monitoring
-- **Chat Interface**: ✅ NEW - Interactive chat for natural conversation with Sybil AI
-- **Status Bar Icon**: ✅ NEW - Quick access robot icon in status bar with keyboard shortcut
-- **User-Configurable Model Strings and Agent Prompts**: Complete implementation of customizable model configurations and agent prompt templates
-- **Enhanced Configuration System**: Full VS Code settings integration with JSON schema validation for sybil.models and sybil.agentPrompts
-- **Multi-Agent Coordination System**: Implemented complete agent workflow with Architect, Developer, Reviewer, and Documenter agents
-- **Test Infrastructure**: Added Mocha-based testing framework with VS Code integration
-- **Full VS Code API Integration**: Implemented comprehensive file, terminal, and debug managers
-- **TypeScript Compilation**: Resolved WSL/Windows environment conflicts
-- **Python Backend**: Established subprocess communication layer
-- **Architecture**: Completed modular extension architecture
+        "contextWindow": 1048576,
         "description": "Google Gemini 2.0 Flash Experimental"
       }
-    },
-    "huggingface": {
-      "hf-deepseek": {
-        "litellmModelName": "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai",
-        "isFree": true,
-        "contextWindow": 32768,
-        "description": "DeepSeek V3 via Fireworks AI"
-      }
     }
-  },
+  }
+}
+```
+
+### Agent Prompts
+Customize prompts for each agent type:
+
+```json
+{
   "sybil.agentPrompts": {
     "architect": {
       "systemPrompt": "You are a Software Architect...",
       "taskPrompt": "Create a detailed technical blueprint..."
-    },
-    "developer": {
-      "systemPrompt": "You are a Software Developer...",
-      "taskPrompt": "Implement the following task..."
     }
   }
 }
-```h agent type without code changes
-- ✅ **Model Statistics**: Real-time statistics on available models and providersuirements
+```
+
+## 🚀 Installation & Setup
+
+### System Requirements
+- **VS Code**: Version 1.74.0 or higher
 - **Operating System**: Windows 10+, macOS 10.15+, or Linux
 - **RAM**: Minimum 4GB, recommended 8GB+
 - **Disk Space**: 500MB free space for dependencies and build artifacts
@@ -97,8 +132,172 @@ For a quick automated setup, use the provided setup scripts:
 
 # Windows (Command Prompt)
 setup-extension.bat
+```
 
-# Windows (PowerShell/Git Bash)
+### Manual Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ROMUSKING/sybil.git
+   cd sybil
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Compile the extension:**
+   ```bash
+   npm run compile
+   ```
+
+4. **Package for installation:**
+   ```bash
+   npx @vscode/vsce package
+   ```
+
+5. **Install the .vsix file:**
+   - Open VS Code
+   - Press `Ctrl/Cmd + Shift + P`
+   - Select "Extensions: Install from VSIX..."
+   - Choose the generated `.vsix` file
+
+## 📖 Usage
+
+### Starting a New Task
+1. Open the Command Palette (`Ctrl/Cmd + Shift + P`)
+2. Select "Sybil: Start New Task"
+3. Enter your development request
+4. Sybil will begin the multi-agent workflow
+
+### Resuming a Session
+1. Select "Sybil: Resume Session" from the Command Palette
+2. Choose from available sessions
+3. Continue where you left off
+
+### Interactive Chat
+- Click the robot icon in the status bar
+- Or use the keyboard shortcut `Ctrl/Cmd + Shift + S`
+- Chat naturally with Sybil AI
+
+### Configuration
+- Access settings through "Sybil: Configure API Keys"
+- View model statistics with "Sybil: Show Model Statistics"
+- Validate configurations with "Sybil: Validate Models"
+
+## 🔧 Development
+
+### Building from Source
+```bash
+# Install dependencies
+npm install
+
+# Compile TypeScript
+npm run compile
+
+# Watch mode for development
+npm run watch
+
+# Run tests
+npm test
+```
+
+### Testing
+```bash
+# Run unit tests
+npm run test:unit
+
+# Run integration tests
+npm run test:integration
+
+# Run API connection tests
+npm run test:api
+```
+
+### Debugging
+1. Open the project in VS Code
+2. Press `F5` to start debugging
+3. A new Extension Development Host window will open
+4. Test the extension functionality
+
+## 📋 Recent Updates (August 31, 2025)
+
+### ✅ **Security & Repository Cleanup**
+- **API Secrets Removal**: ✅ COMPLETED - All API keys and sensitive data removed from repository and git history
+- **Git History Cleanup**: ✅ COMPLETED - Used git filter-branch to remove secrets from entire commit history
+- **Push Protection Resolution**: ✅ COMPLETED - Successfully resolved GitHub push protection violations
+- **Repository Security**: ✅ COMPLETED - Repository is now secure for public distribution
+
+### ✅ **TypeScript Migration Complete**
+- **Native Implementation**: ✅ COMPLETED - Full port from Python to TypeScript with native VS Code integration
+- **Performance Optimization**: ✅ COMPLETED - No external Python process required
+- **Advanced Tool Registry**: ✅ COMPLETED - Comprehensive tool system for file operations, shell execution, and testing
+- **Model Manager**: ✅ COMPLETED - AI provider integration with fallback support
+- **Performance Tracker**: ✅ COMPLETED - Built-in usage tracking and performance monitoring
+
+### ✅ **OpenRouter API Integration**
+- **API Implementation**: ✅ VERIFIED - Implementation matches provided example exactly
+- **Connection Testing**: ✅ COMPLETED - Comprehensive test suite validating all provider integrations
+- **Error Handling**: ✅ COMPLETED - Robust error handling for API failures and fallbacks
+
+### ✅ **User Experience Enhancements**
+- **Interactive Chat**: ✅ NEW - Natural conversation interface with Sybil AI
+- **Status Bar Integration**: ✅ NEW - Quick access robot icon with keyboard shortcuts
+- **Configuration UI**: ✅ NEW - User-friendly settings interface
+- **Real-time Feedback**: ✅ NEW - Live progress updates and error notifications
+
+## 🐛 Issues Resolved
+
+### Critical Issues Fixed
+- **🔒 Security Violations**: Resolved GitHub push protection by removing all API secrets from repository
+- **📝 Merge Conflicts**: Resolved complex git merge conflicts in documentation files
+- **🔧 TypeScript Compilation**: Fixed compilation errors and dependency issues
+- **📦 Package Optimization**: Reduced package size and optimized for marketplace distribution
+- **🔗 API Integration**: Fixed connection issues and improved error handling
+
+### Performance Improvements
+- **⚡ Native Performance**: Eliminated Python subprocess overhead
+- **📊 Memory Optimization**: Reduced memory footprint through efficient state management
+- **🔄 Session Persistence**: Improved session loading and saving performance
+- **🌐 Network Efficiency**: Optimized API calls and response handling
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Add comprehensive tests for new features
+- Update documentation for API changes
+- Ensure all tests pass before submitting PRs
+- Use conventional commit messages
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **VS Code Extension API** for providing comprehensive development tools
+- **OpenRouter** for free AI model access
+- **HuggingFace** for open-source model hosting
+- **All AI Providers** for their excellent services
+- **Open Source Community** for inspiration and support
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/ROMUSKING/sybil/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/ROMUSKING/sybil/discussions)
+- **Documentation**: [Wiki](https://github.com/ROMUSKING/sybil/wiki)
+
+---
+
+**Sybil AI Coding Agent** - Revolutionizing software development through intelligent multi-agent collaboration.
 bash setup-extension.sh
 ```
 

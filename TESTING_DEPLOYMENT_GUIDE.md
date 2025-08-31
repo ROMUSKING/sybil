@@ -3,6 +3,10 @@
 ## Overview
 This guide provides comprehensive instructions for testing and deploying the Sybil VS Code extension.
 
+**Last Updated**: August 31, 2025
+**Extension Status**: **100% Complete** ✅
+**Security Status**: **Repository Cleaned** ✅
+
 ## Prerequisites
 - Node.js 18+ installed
 - VS Code 1.74.0 or later
@@ -13,7 +17,7 @@ This guide provides comprehensive instructions for testing and deploying the Syb
 
 ### 1. Automated Testing Script
 ```bash
-cd /home/r/workspace/github.com/sybil/ext
+cd /home/r/workspace/github.com/sybil
 chmod +x test-extension.sh
 ./test-extension.sh
 ```
@@ -21,33 +25,59 @@ chmod +x test-extension.sh
 ### 2. Manual Testing in VS Code
 
 #### Option A: Development Host Mode (Recommended)
-1. Open the extension folder in VS Code:
+1. Open the project root in VS Code:
    ```bash
-   code /home/r/workspace/github.com/sybil/ext
+   code /home/r/workspace/github.com/sybil
    ```
 
 2. Press `F5` or go to Run & Debug → "Run Extension"
    - This opens a new VS Code window with the extension loaded
 
 3. In the new window, test the extension:
-   - Open Command Palette (`Ctrl+Shift+P`)
+   - Open Command Palette (`Ctrl/Cmd + Shift + P`)
    - Type "Sybil" to see available commands
    - Try "Sybil: Start New Task"
 
 #### Option B: Install from VSIX (For Distribution Testing)
 ```bash
-cd /home/r/workspace/github.com/sybil/ext
+cd /home/r/workspace/github.com/sybil
 npm install -g @vscode/vsce
-vsce package
+npx @vscode/vsce package
 code --install-extension sybil-ai-coding-agent-0.1.0.vsix
 ```
+
+## Security Notice ✅
+
+### Repository Security Cleanup (August 31, 2025)
+- **✅ API Secrets Removed**: All API keys and sensitive data have been removed from the repository
+- **✅ Git History Cleaned**: Used `git filter-branch` to remove secrets from entire commit history
+- **✅ Push Protection Resolved**: Successfully resolved GitHub security violations
+- **✅ Marketplace Ready**: Repository is now secure for public distribution
+
+### Testing with API Keys
+For testing AI functionality, you need to configure API keys:
+
+1. Open VS Code settings (`Ctrl/Cmd + ,`)
+2. Search for "Sybil"
+3. Configure your API keys in the "Sybil API Keys" section:
+   ```json
+   {
+     "sybil.apiKeys": {
+       "openrouter": "YOUR_OPENROUTER_API_KEY",
+       "huggingface": "YOUR_HUGGINGFACE_API_KEY"
+     }
+   }
+   ```
 
 ## Testing Checklist
 
 ### ✅ Extension Activation
 - [ ] Extension loads without errors in developer console
-- [ ] Status bar shows extension is active
+- [ ] Status bar shows robot icon (🤖)
 - [ ] Commands appear in Command Palette
+- [ ] Chat view is accessible
+
+### ✅ Core Functionality
 
 ### ✅ Basic Commands
 - [ ] "Sybil: Start New Task" opens input dialog

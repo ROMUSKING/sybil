@@ -168,8 +168,13 @@ Your final output must be a single XML block `<review><status>approved/rejected<
 
         review_match = re.search(r"<review>(.*?)</review>", raw_response, re.DOTALL)
         if review_match:
-            status = re.search(r"<status>(.*?)</status>", review_match.group(1)).group(1).strip()
-            comment = re.search(r"<comment>(.*?)</comment>", review_match.group(1)).group(1).strip()
+            review_content = review_match.group(1)
+            status_match = re.search(r"<status>(.*?)</status>", review_content, re.DOTALL)
+            comment_match = re.search(r"<comment>(.*?)</comment>", review_content, re.DOTALL)
+
+            status = status_match.group(1).strip() if status_match else "rejected"
+            comment = comment_match.group(1).strip() if comment_match else "No comment provided."
+
             if status == "approved":
                 return {"review_feedback": "approved"}
             else:
@@ -178,6 +183,39 @@ Your final output must be a single XML block `<review><status>approved/rejected<
         logger.error("Could not parse review from reviewer response", extra={"response": raw_response})
         return {"error": "Could not parse review from reviewer response."}
 
+class DocumenterAgent(Agent):
+    """Generates documentation for the completed task."""
+    def _create_system_prompt(self, task_description: str, files: list[str]):
+        return f"""You are a DocumenterAgent. Your job is to write a brief summary of a completed development task for inclusion in a project's documentation. Update the documentation based on progress and issues found.
+
+**Original Task:**
+{task_description}
+
+**Files Created or Modified:**
+{', '.join(files)}
+
+Based on the information above, write a short summary of the changes. The summary should be suitable for a "Development Log" or "Changelog" section in a README.md file. Your output should be just the summary text, without any extra formatting or XML tags.
+"""
+
+    def run(self, state: GraphState) -> dict:
+        task_description = state['initial_request']
+        files = state.get('completed_files', [])
+
+        logger.info(f"{self.name} starting documentation", extra={"agent_name": self.name, "model_name": self.model_name, "task": task_description})
+
+        prompt = self._create_system_prompt(task_description, files)
+        summary = self.model_manager.send_request(prompt, friendly_model_name=self.model_name)
+
+        try:
+            with open("README.md", "a") as f:
+                f.write(f"\n\n### Session Summary: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(summary)
+            logger.info("Documentation updated successfully.")
+        except Exception as e:
+            logger.error("Failed to update documentation", extra={"error": str(e)})
+            return {"error": f"Failed to update documentation: {e}"}
+
+        return {}
 
 from src.graph import AgentGraph
 
@@ -191,8 +229,9 @@ class OrchestratorAgent(Agent):
         architect = SoftwareArchitectAgent("SoftwareArchitectAgent", model_manager, agent_models.get("architect"))
         developer = DeveloperAgent(model_manager, agent_models.get("developer"), global_tool_registry)
         reviewer = ReviewerAgent("ReviewerAgent", model_manager, agent_models.get("reviewer"))
+        documenter = DocumenterAgent("DocumenterAgent", model_manager, agent_models.get("documenter"))
 
-        self.agent_graph = AgentGraph(architect, developer, reviewer)
+        self.agent_graph = AgentGraph(architect, developer, reviewer, documenter)
         # Note: Performance tracking would need to be re-implemented, perhaps via LangSmith or graph callbacks.
         self.performance_data = {}
 

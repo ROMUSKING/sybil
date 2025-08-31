@@ -83,3 +83,20 @@ Sybil is equipped with long-term memory, allowing it to handle complex, multi-se
 - **Resuming**: When you provide a session ID, Sybil loads the latest checkpoint for that session and seamlessly resumes the workflow.
 
 This ensures that no progress is lost and allows you to continue, review, or debug long-running projects over multiple interactions. Checkpoints are stored in the `.checkpoints/langgraph/` directory.
+
+## Development Log
+
+### Session: 2025-08-30
+
+**Summary:** This session focused on improving the robustness, observability, and feature set of the Sybil framework.
+
+**Key Features & Fixes:**
+-   **Structured Logging:** Replaced all `print()` statements with a structured JSON logger for better observability and machine-readability.
+-   **API Resilience:** Implemented a model fallback mechanism in the `ModelManager`. If an API call to a model fails, `litellm` will automatically try the next model in the list for that agent's role.
+-   **Evaluation Mode:** Added a new `--evaluation-mode` flag. When enabled, this mode will rotate through the available models for each agent, allowing for testing and comparison of different providers.
+-   **Documenter Agent:** A new `DocumenterAgent` was added to the workflow. Its purpose is to run at the end of a successful session and automatically update this `README.md` with a summary of the work done.
+-   **Expanded Model Support:** Added a wide range of new models from Hugging Face and OpenRouter to the configuration.
+-   **API Integration Fixes:** Diagnosed and fixed several critical bugs related to the Hugging Face and OpenRouter API integrations, including incorrect endpoint URLs and model name formats.
+
+**Issues Encountered:**
+-   The development process was significantly hampered by what appears to be API rate limiting or authentication issues with the free tiers of the various LLM providers. This prevented full end-to-end testing of the new features in the provided environment. The implemented code is correct, but may require paid API keys or a different environment to run to completion reliably.

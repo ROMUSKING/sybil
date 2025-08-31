@@ -1,0 +1,48 @@
+{
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.workingDirectories": [
+        "."
+    ],
+    "files.exclude": {
+        "out": false,
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/.DS_Store": true
+    },
+    "search.exclude": {
+        "out": true,
+        "**/node_modules": true,
+        "**/.git": true
+    },
+    "debug.javascript.usePreview": true,
+    "debug.node.autoAttach": "on",
+    "debug.terminal.clearBeforeReusing": true,
+    "launch": {
+        "version": "0.2.0",
+        "configurations": []
+    },
+    "extensions.ignoreRecommendations": false,
+    "typescript.preferences.quoteStyle": "single",
+    "editor.formatOnSave": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "emmet.includeLanguages": {
+        "typescript": "html"
+    },
+    "files.associations": {
+        "*.test.js": "javascript",
+        "*.test.ts": "typescript"
+    }
+}

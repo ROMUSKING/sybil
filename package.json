@@ -6,6 +6,14 @@
     "engines": {
         "vscode": "^1.74.0"
     },
+    "main": "./out/extension.js",
+    "files": [
+        "out/**/*",
+        "media/**/*",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
     "categories": [
         "AI",
         "Programming Languages",
@@ -18,7 +26,10 @@
         "onCommand:sybil.showAnalytics",
         "onView:sybilChat"
     ],
-    "main": "./out/extension.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ROMUSKING/sybil.git"
+    },
     "contributes": {
         "commands": [
             {
@@ -158,6 +169,32 @@
                                         }
                                     }
                                 },
+                                "or-deepseek-chimera": {
+                                    "type": "object",
+                                    "description": "DeepSeek R1T Chimera",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/tngtech/deepseek-r1t-chimera:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "DeepSeek R1T Chimera - Advanced reasoning with multimodal",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
                                 "or-qwen-coder": {
                                     "type": "object",
                                     "description": "Qwen3 Coder",
@@ -180,6 +217,58 @@
                                         "description": {
                                             "type": "string",
                                             "default": "Qwen3 Coder - Specialized for code generation",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
+                                "or-llama3.3-instruct": {
+                                    "type": "object",
+                                    "description": "Llama 3.3 8B Instruct",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/meta-llama/llama-3.3-8b-instruct:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "Llama 3.3 8B Instruct - Meta's instruction-tuned model",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
+                                "or-mistral-small-3.2": {
+                                    "type": "object",
+                                    "description": "Mistral Small 3.2 24B",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/mistralai/mistral-small-3.2-24b-instruct:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "Mistral Small 3.2 24B - Efficient instruction model",
                                             "description": "Model description"
                                         }
                                     }
@@ -425,7 +514,8 @@
         "test:unit": "echo 'Unit tests temporarily disabled'",
         "test:integration": "echo 'Integration tests temporarily disabled'",
         "test:watch": "echo 'Test watch temporarily disabled'",
-        "test:coverage": "echo 'Test coverage temporarily disabled'"
+        "test:coverage": "echo 'Test coverage temporarily disabled'",
+        "test:api": "node load-config.js && npx ts-node src/test/test_api_standalone.ts"
     },
     "devDependencies": {
         "@types/glob": "^8.1.0",
@@ -434,12 +524,15 @@
         "@types/vscode": "^1.74.0",
         "@typescript-eslint/eslint-plugin": "^5.42.0",
         "@typescript-eslint/parser": "^5.42.0",
+        "@vscode/vsce": "^3.6.0",
         "eslint": "^8.28.0",
         "glob": "^8.1.0",
         "mocha": "^10.1.0",
-        "typescript": "^4.9.4"
+        "typescript": "^4.9.4",
+        "vsce": "^1.103.1"
     },
     "dependencies": {
+        "openai": "^4.52.7",
         "vscode-languageclient": "^8.1.0"
     }
 }

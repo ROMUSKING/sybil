@@ -14,7 +14,7 @@ export class PerformanceTracker {
         if (!this.performanceData[agentName]) {
             this.performanceData[agentName] = [];
         }
-        this.performanceData[agentName].push(duration);
+        this.performanceData[agentName]!.push(duration);
     }
 
     public getReport(): PerformanceData {

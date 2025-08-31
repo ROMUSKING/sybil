@@ -17,8 +17,8 @@ export class UsageTracker {
             this.usageData[provider] = {};
         }
 
-        if (!this.usageData[provider][model]) {
-            this.usageData[provider][model] = {
+        if (!this.usageData[provider]![model]) {
+            this.usageData[provider]![model] = {
                 total_input_tokens: 0,
                 total_output_tokens: 0,
                 total_cost: 0,
@@ -26,7 +26,7 @@ export class UsageTracker {
             };
         }
 
-        const modelData = this.usageData[provider][model];
+        const modelData = this.usageData[provider]![model]!;
         modelData.total_input_tokens += inputTokens;
         modelData.total_output_tokens += outputTokens;
         modelData.total_cost += cost;

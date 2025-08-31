@@ -1,0 +1,41 @@
+{
+    "api_keys": {
+        "openrouter": "sk-or-v1-your-openrouter-key-here",
+        "huggingface": "hf_your-huggingface-token-here",
+        "openai": "sk-your-openai-key-here",
+        "anthropic": "sk-ant-your-anthropic-key-here",
+        "google": "your-google-ai-key-here"
+    },
+    "models": {
+        "or-gemini-flash": {
+            "litellmModelName": "openrouter/google/gemini-2.0-flash-exp:free",
+            "isFree": true,
+            "contextWindow": 1048576,
+            "description": "Google Gemini 2.0 Flash Experimental - Fast and efficient"
+        },
+        "or-deepseek-0528": {
+            "litellmModelName": "openrouter/deepseek/deepseek-r1-0528:free",
+            "isFree": true,
+            "contextWindow": 32768,
+            "description": "DeepSeek R1 - Advanced reasoning model"
+        },
+        "or-qwen-coder": {
+            "litellmModelName": "openrouter/qwen/qwen3-coder:free",
+            "isFree": true,
+            "contextWindow": 32768,
+            "description": "Qwen3 Coder - Specialized for code generation"
+        },
+        "hf-deepseek": {
+            "litellmModelName": "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai",
+            "isFree": true,
+            "contextWindow": 32768,
+            "description": "DeepSeek V3 - Advanced reasoning via Fireworks AI"
+        },
+        "hf-qwen-coder": {
+            "litellmModelName": "huggingface/Qwen/Qwen2.5-Coder-32B-Instruct:fireworks-ai",
+            "isFree": true,
+            "contextWindow": 32768,
+            "description": "Qwen2.5 Coder 32B - Code generation specialist"
+        }
+    }
+}

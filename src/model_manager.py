@@ -23,52 +23,75 @@ class ModelManager:
 
         litellm.telemetry = False
 
-    def send_request(self, prompt: str, friendly_model_name: str) -> str:
-        model_info = self.models_map.get(friendly_model_name)
-        if not model_info:
-            logger.error("Model not found in config.yaml", extra={"model_name": friendly_model_name})
-            return f"Error: Model '{friendly_model_name}' not found in config.yaml."
+    def send_request(self, prompt: str, friendly_model_names: list[str]) -> str:
+        if not friendly_model_names:
+            logger.error("No models provided to send_request")
+            return "Error: No models provided."
 
-        litellm_model_name = model_info.get("litellm_model_name")
-        if not litellm_model_name:
-            logger.error("'litellm_model_name' not defined for model", extra={"model_name": friendly_model_name})
-            return f"Error: 'litellm_model_name' not defined for model '{friendly_model_name}'."
+        litellm_model_names = []
+        for friendly_name in friendly_model_names:
+            model_info = self.models_map.get(friendly_name)
+            if not model_info:
+                logger.warning(f"Model '{friendly_name}' not found in config.yaml, skipping.")
+                continue
+
+            litellm_name = model_info.get("litellm_model_name")
+            if not litellm_name:
+                logger.warning(f"'litellm_model_name' not defined for model '{friendly_name}', skipping.")
+                continue
+
+            litellm_model_names.append(litellm_name)
+
+        if not litellm_model_names:
+            logger.error("No valid models found after checking config.", extra={"friendly_names": friendly_model_names})
+            return "Error: No valid models found in config."
+
+        primary_model = litellm_model_names[0]
+        fallback_models = litellm_model_names[1:]
 
         logger.info(
-            "Sending request to model",
-            extra={"friendly_model_name": friendly_model_name, "litellm_model_name": litellm_model_name}
+            "Sending request to model with fallbacks",
+            extra={"primary_model": primary_model, "fallbacks": fallback_models}
         )
 
+        messages = [{"role": "user", "content": prompt}]
+        if self.verbose:
+            print("--- Request ---")
+            print(prompt)
+            print("---------------")
+
+        response = litellm.completion(
+            model=primary_model,
+            messages=messages,
+            fallbacks=fallback_models
+        )
+
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        content = response.choices[0].message.content
+        response_model = response.model # Get the actual model used
+
+        if self.verbose:
+            print("--- Response ---")
+            print(content)
+            print("----------------")
+
         try:
-            messages = [{"role": "user", "content": prompt}]
-            if self.verbose:
-                print("--- Request ---")
-                print(prompt)
-                print("---------------")
-
-            response = litellm.completion(
-                model=litellm_model_name,
-                messages=messages
-            )
-
-            input_tokens = response.usage.prompt_tokens
-            output_tokens = response.usage.completion_tokens
-            content = response.choices[0].message.content
-
-            if self.verbose:
-                print("--- Response ---")
-                print(content)
-                print("----------------")
-
             cost = litellm.completion_cost(completion_response=response)
-
-            self.usage_tracker.record_usage(
-                "litellm", friendly_model_name, input_tokens, output_tokens, cost
-            )
-
-            logger.info("Received response from model", extra={"model_name": friendly_model_name, "cost": cost})
-            return content
-
         except Exception as e:
-            logger.error("Error calling model via LiteLLM", extra={"model_name": litellm_model_name, "error": str(e)})
-            return f"Error: {e}"
+            logger.warning(f"Could not calculate cost for model {response_model}: {e}")
+            cost = 0
+
+        # Find the friendly name of the model that was actually used
+        used_friendly_name = "unknown"
+        for friendly_name, model_info in self.models_map.items():
+            if model_info.get("litellm_model_name") == response_model:
+                used_friendly_name = friendly_name
+                break
+
+        self.usage_tracker.record_usage(
+            "litellm", used_friendly_name, input_tokens, output_tokens, cost
+        )
+
+        logger.info("Received response from model", extra={"model_name": used_friendly_name, "cost": cost})
+        return content

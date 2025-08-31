@@ -1,0 +1,16 @@
+api_keys:
+  openrouter: "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"
+
+models:
+  "gpt-oss-free":
+    litellm_model_name: "openrouter/openai/gpt-oss-120b:free"
+
+agent_models:
+  architect:
+    - "gpt-oss-free"
+  developer:
+    - "gpt-oss-free"
+  reviewer:
+    - "gpt-oss-free"
+  documenter:
+    - "gpt-oss-free"

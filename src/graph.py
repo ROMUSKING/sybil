@@ -7,15 +7,16 @@ from langgraph.graph import StateGraph, END
 from src.graph_state import GraphState
 from src.logger import logger
 from src.agents import Agent
+from src.performance import PerformanceTracker
 
 class AgentGraph:
-    def __init__(self, architect, developer, reviewer, documenter, checkpointer: Optional[BaseCheckpointSaver] = None):
+    def __init__(self, architect, developer, reviewer, documenter, performance_tracker: PerformanceTracker, checkpointer: Optional[BaseCheckpointSaver] = None):
         self.architect = architect
         self.developer = developer
         self.reviewer = reviewer
         self.documenter = documenter
+        self.performance_tracker = performance_tracker
         self.checkpointer = checkpointer
-        self.performance_data = {}
         self.graph = self._build_graph()
 
     def _timed_agent_run(self, agent: Agent, state: GraphState):
@@ -24,14 +25,9 @@ class AgentGraph:
         result = agent.run(state)
         end_time = time.time()
         duration = round(end_time - start_time, 2)
-        if agent_name not in self.performance_data:
-            self.performance_data[agent_name] = []
-        self.performance_data[agent_name].append(duration)
+        self.performance_tracker.record_performance(agent_name, duration)
         logger.info(f"Agent {agent_name} took {duration}s")
         return result
-
-    def get_performance_report(self):
-        return self.performance_data
 
     def _parse_blueprint(self, blueprint_xml: str):
         # This logic is copied from the old OrchestratorAgent

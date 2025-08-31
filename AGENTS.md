@@ -96,6 +96,22 @@ This section tracks the project's tasks and their status.
     -   [x] Implemented API wrapper for OpenAI.
     -   [x] Implemented API wrapper for Qwen.
     -   [x] Implemented API wrapper for Hugging Face.
+    -   [x] Integrated OpenRouter models:
+        -   `qwen/qwen3-coder:free`
+        -   `meta-llama/llama-4-maverick:free`
+        -   `nvidia/llama-3.1-nemotron-ultra-253b-v1:free`
+        -   `moonshotai/kimi-vl-a3b-thinking:free`
+        -   `microsoft/mai-ds-r1:free`
+        -   `tngtech/deepseek-r1t-chimera:free`
+        -   `qwen/qwen3-235b-a22b:free`
+        -   `meta-llama/llama-3.3-8b-instruct:free`
+        -   `deepseek/deepseek-r1-0528:free`
+        -   `deepseek/deepseek-r1-0528-qwen3-8b:free`
+        -   `moonshotai/kimi-dev-72b:free`
+        -   `mistralai/mistral-small-3.2-24b-instruct:free`
+        -   `tngtech/deepseek-r1t2-chimera:free`
+        -   `z-ai/glm-4.5-air:free`
+        -   `openai/gpt-oss-20b:free`
 -   [x] **Quota Management**: Implemented the `ModelManager` to handle model switching based on different quota types (cost-based, RPM, monthly calls).
 -   [x] **Usage Persistence**: Implemented `UsageTracker` to persist usage data across sessions.
 -   [x] **Basic Agent Framework**: Created a base `Agent` class and a `ManagerAgent`.

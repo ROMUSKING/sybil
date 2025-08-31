@@ -1,9 +1,8 @@
 # Generic section for API keys. The key name (e.g., 'openai') should correspond
 # to the environment variable LiteLLM expects (e.g., OPENAI_API_KEY).
 api_keys:
-  openai: "YOUR_OPENAI_KEY"
-  anthropic: "YOUR_ANTHROPIC_KEY"
   openrouter: "YOUR_OPENROUTER_KEY"
+  huggingface: "YOUR_HUGGINGFACE_KEY"
   # Add other provider keys here as needed, e.g., cohere, fireworks, etc.
 
 # --- Model Definitions ---
@@ -41,6 +40,36 @@ models:
   # --- OpenRouter Models ---
   "or-gemini-flash":
     litellm_model_name: "openrouter/google/gemini-2.0-flash-exp:free"
+  "or-qwen-coder":
+    litellm_model_name: "openrouter/qwen/qwen3-coder:free"
+  "or-llama-maverick":
+    litellm_model_name: "openrouter/meta-llama/llama-4-maverick:free"
+  "or-nemotron-ultra":
+    litellm_model_name: "openrouter/nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
+  "or-kimi-vl-thinking":
+    litellm_model_name: "openrouter/moonshotai/kimi-vl-a3b-thinking:free"
+  "or-mai-ds":
+    litellm_model_name: "openrouter/microsoft/mai-ds-r1:free"
+  "or-deepseek-chimera":
+    litellm_model_name: "openrouter/tngtech/deepseek-r1t-chimera:free"
+  "or-qwen3-235b":
+    litellm_model_name: "openrouter/qwen/qwen3-235b-a22b:free"
+  "or-llama3.3-instruct":
+    litellm_model_name: "openrouter/meta-llama/llama-3.3-8b-instruct:free"
+  "or-deepseek-0528":
+    litellm_model_name: "openrouter/deepseek/deepseek-r1-0528:free"
+  "or-deepseek-qwen3":
+    litellm_model_name: "openrouter/deepseek/deepseek-r1-0528-qwen3-8b:free"
+  "or-kimi-dev-72b":
+    litellm_model_name: "openrouter/moonshotai/kimi-dev-72b:free"
+  "or-mistral-small-3.2":
+    litellm_model_name: "openrouter/mistralai/mistral-small-3.2-24b-instruct:free"
+  "or-deepseek-r1t2-chimera":
+    litellm_model_name: "openrouter/tngtech/deepseek-r1t2-chimera:free"
+  "or-glm4.5-air":
+    litellm_model_name: "openrouter/z-ai/glm-4.5-air:free"
+  "or-gpt-oss-20b":
+    litellm_model_name: "openrouter/openai/gpt-oss-20b:free"
 
 # --- Agent Model Assignments ---
 # Assign a list of friendly model names to each agent role.
@@ -50,6 +79,7 @@ agent_models:
     - "hf-deepseek"
     - "or-gemini-flash"
   developer:
+    - "or-qwen-coder"
     - "hf-deepseek"
     - "featherless-gemma"
     - "hyperbolic-qwen"

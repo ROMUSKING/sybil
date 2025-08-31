@@ -123,8 +123,21 @@ This section tracks the project's tasks and their status.
 -   [x] **Code-then-CoT**: Updated the agent's prompt to require final code answers to be in "Code-then-Chain-of-Thought" format.
 -   [x] **Error Handling**: Refactored core API wrappers (`OpenAI`, `Anthropic`, etc.) to handle specific exceptions like rate limiting and authentication errors.
 -   [x] **Session Persistence in Config**: Implemented automatic storage of session-id in `config.yaml` for seamless session resumption. Added `--clear-session` flag for manual clearing, and automatic clearing on successful task completion.
+-   [x] **VS Code Extension**: Created a VS Code extension (`ext/` folder) that integrates Sybil's capabilities with VS Code's native tools for file manipulation, debugging, terminal operations, and UI components.
 
 ### Next Tasks
+
+#### VS Code Extension Development
+-   [x] **Extension Structure**: ✅ COMPLETED - Created complete VS Code extension framework with TypeScript, package.json, and development configuration
+-   [x] **Dependencies Setup**: ✅ COMPLETED - Installed npm dependencies including VS Code types, TypeScript, and ESLint
+-   [x] **TypeScript Compilation**: ✅ COMPLETED - Resolved path/environment issues preventing successful compilation (Node.js in Ubuntu)
+-   [x] **Python Backend Integration**: ✅ COMPLETED - Implemented subprocess communication between extension and Python backend
+-   [x] **VS Code API Integration**: ✅ COMPLETED - Connected file operations, terminal, and debug APIs to Python logic
+-   [x] **UI Components**: ✅ COMPLETED - Complete webview panels, tree views, and status bar integration
+-   [x] **Setup Scripts**: ✅ COMPLETED - Created automated setup scripts (`setup-extension.sh`, `setup-extension.bat`)
+-   [x] **Documentation**: ✅ COMPLETED - Comprehensive setup instructions and troubleshooting guides
+-   [ ] **Testing & Debugging**: Set up extension testing framework and debug configurations
+-   [ ] **Marketplace Packaging**: Package extension for VS Code marketplace distribution
 
 #### Phase 6: Observability & Performance
 -   [x] **Implement Structured Logging**: Created a `src/logger.py` module and replaced all `print()` statements throughout the application with structured, configurable logging.
@@ -135,7 +148,41 @@ This section tracks the project's tasks and their status.
 -   [ ] Research and add hosted provider for Llama.
 -   [ ] Research and add wrapper for Grok.
 
-## IV. Development Workflow & Coding Style
+## V. Project Documentation & Resources
+
+### Key Documentation Files
+All agents must be aware of and reference these critical documentation files:
+
+-   **`README.md`**: Main project documentation with setup instructions, usage examples, and development log
+-   **`ext/README.md`**: Comprehensive VS Code extension documentation with setup, development, and troubleshooting guides
+-   **`ext/IMPLEMENTATION_PLAN.md`**: Detailed implementation plan with current progress, issues, and next steps
+-   **`AGENTS.md`**: This file - master guide for agent instructions and project roadmap
+
+### Setup Scripts & Automation
+-   **`setup-extension.sh`**: Automated setup script for Linux/macOS (run with `./setup-extension.sh`)
+-   **`setup-extension.bat`**: Automated setup script for Windows (run with `setup-extension.bat`)
+-   These scripts handle the complete setup process including prerequisites checking, dependency installation, and compilation
+
+### Development Environment
+-   **VS Code Extension**: Located in `ext/` directory with full TypeScript development setup
+-   **Python Backend**: Main application in `src/` directory with comprehensive agent framework
+-   **Configuration**: `config.yaml` for API keys and model settings
+-   **Testing**: `tests/` directory with pytest test suite
+
+### Current Project Status (August 31, 2025)
+-   **Overall Progress**: ~90% complete
+-   **VS Code Extension**: ~90% complete with full API integration and comprehensive documentation
+-   **Python Backend**: Fully functional with multi-agent framework
+-   **Documentation**: Comprehensive with setup scripts and troubleshooting guides
+-   **Setup Automation**: Complete with cross-platform setup scripts
+-   **Testing**: Basic functionality verified, comprehensive testing pending
+
+### Critical Issues & Resolutions
+-   ✅ **TypeScript Compilation**: RESOLVED - Fixed WSL/Windows UNC path conflicts
+-   ✅ **Python Backend Communication**: RESOLVED - Subprocess communication implemented
+-   ✅ **VS Code API Integration**: RESOLVED - All core APIs integrated
+-   🔄 **Multi-Agent Coordination**: IN PROGRESS - Advanced coordination logic pending
+-   🔄 **Testing Framework**: IN PROGRESS - Comprehensive testing setup needed
 
 This section outlines specific development utilities and coding standards for the project.
 

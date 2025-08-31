@@ -42,3 +42,13 @@ performance.yaml
 
 # Config file
 config.yaml
+
+# VS Code Extension
+ext/out/
+ext/node_modules/
+ext/*.vsix
+ext/.vscode/settings.json
+
+# Build artifacts
+*.vsix
+.DS_Store

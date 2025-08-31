@@ -7,6 +7,7 @@ import { AnalyticsProvider } from './analyticsProvider';
 import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
+import { AgentCoordinator } from './agentCoordinator';
 
 export class SybilAgent {
     private context: vscode.ExtensionContext;
@@ -15,6 +16,7 @@ export class SybilAgent {
     private fileManager: FileManager;
     private terminalManager: TerminalManager;
     private debugManager: DebugManager;
+    private agentCoordinator: AgentCoordinator;
     private pythonProcess: any;
     private outputChannel: vscode.OutputChannel;
 
@@ -33,6 +35,12 @@ export class SybilAgent {
         this.terminalManager = terminalManager;
         this.debugManager = debugManager;
         this.outputChannel = vscode.window.createOutputChannel('Sybil Agent');
+        this.agentCoordinator = new AgentCoordinator(
+            fileManager,
+            terminalManager,
+            debugManager,
+            this.outputChannel
+        );
         this.context.subscriptions.push(this.outputChannel);
     }
 
@@ -60,58 +68,27 @@ export class SybilAgent {
     }
 
     private async executeTask(task: string, sessionId: string): Promise<void> {
-        const pythonPath = this.getPythonPath();
-        const scriptPath = this.getScriptPath();
-
-        if (!fs.existsSync(scriptPath)) {
-            vscode.window.showErrorMessage('Sybil Python script not found. Please ensure the Python backend is properly set up.');
-            return;
-        }
-
         this.outputChannel.show();
         this.outputChannel.appendLine(`Starting Sybil task: ${task}`);
         this.outputChannel.appendLine(`Session ID: ${sessionId}`);
 
-        const args = [
-            scriptPath,
-            task,
-            '--session-id', sessionId
-        ];
+        try {
+            // Use the AgentCoordinator for multi-agent workflow
+            const finalState = await this.agentCoordinator.executeTask(task, sessionId);
 
-        if (this.getVerboseSetting()) {
-            args.push('--verbose');
-        }
-
-        this.pythonProcess = spawn(pythonPath, args, {
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd(),
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
-
-        this.pythonProcess.stdout.on('data', (data: Buffer) => {
-            this.outputChannel.append(data.toString());
-        });
-
-        this.pythonProcess.stderr.on('data', (data: Buffer) => {
-            this.outputChannel.append(data.toString());
-        });
-
-        this.pythonProcess.on('close', async (code: number) => {
-            if (code === 0) {
+            if (finalState.error) {
+                this.outputChannel.appendLine(`\nTask failed: ${finalState.error}`);
+                vscode.window.showErrorMessage(`Sybil task failed: ${finalState.error}`);
+            } else {
                 this.outputChannel.appendLine('\nTask completed successfully!');
                 await this.sessionManager.clearCurrentSession();
                 await this.analyticsProvider.updateAnalytics(sessionId);
                 vscode.window.showInformationMessage('Sybil task completed successfully!');
-            } else {
-                this.outputChannel.appendLine(`\nTask failed with exit code ${code}`);
-                vscode.window.showErrorMessage('Sybil task failed. Check the output channel for details.');
             }
-            this.pythonProcess = null;
-        });
-
-        this.pythonProcess.on('error', (error: Error) => {
-            this.outputChannel.appendLine(`\nError: ${error.message}`);
-            vscode.window.showErrorMessage(`Sybil process error: ${error.message}`);
-        });
+        } catch (error) {
+            this.outputChannel.appendLine(`\nError: ${error}`);
+            vscode.window.showErrorMessage(`Sybil task error: ${error}`);
+        }
     }
 
     public updateConfiguration(): void {

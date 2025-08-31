@@ -6,6 +6,7 @@ from src.usage import UsageTracker
 from src.model_manager import ModelManager
 from src.agents import OrchestratorAgent
 from src.logger import logger
+from src.performance import PerformanceTracker
 
 USAGE_FILE = "usage.json"
 
@@ -25,10 +26,11 @@ def main():
 
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
+    performance_tracker = PerformanceTracker()
     model_manager = ModelManager(config, usage_tracker, verbose=args.verbose)
 
     # The OrchestratorAgent now encapsulates the entire workflow.
-    orchestrator = OrchestratorAgent(model_manager, config)
+    orchestrator = OrchestratorAgent(model_manager, config, performance_tracker)
 
     result = orchestrator.run(args.task, session_id=args.session_id)
 
@@ -38,7 +40,11 @@ def main():
     logger.info("Sybil finished.", extra={"task_result": result})
 
     # --- Final Analytics Report ---
-    performance_report = orchestrator.get_performance_report()
+    try:
+        performance_tracker.save()
+    except Exception as e:
+        logger.error(f"Failed to save performance data: {e}", exc_info=True)
+    performance_report = performance_tracker.get_report()
     final_usage = usage_tracker.usage_data
 
     # Calculate total cost

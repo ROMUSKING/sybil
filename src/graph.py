@@ -9,11 +9,10 @@ from src.logger import logger
 from src.agents import Agent
 
 class AgentGraph:
-    def __init__(self, architect, developer, reviewer, documenter, checkpointer: Optional[BaseCheckpointSaver] = None):
+    def __init__(self, architect, developer, reviewer, checkpointer: Optional[BaseCheckpointSaver] = None):
         self.architect = architect
         self.developer = developer
         self.reviewer = reviewer
-        self.documenter = documenter
         self.checkpointer = checkpointer
         self.performance_data = {}
         self.graph = self._build_graph()
@@ -111,7 +110,6 @@ class AgentGraph:
         workflow.add_node("select_task", self._select_next_task)
         workflow.add_node("developer", functools.partial(self._timed_agent_run, self.developer))
         workflow.add_node("reviewer", functools.partial(self._timed_agent_run, self.reviewer))
-        workflow.add_node("documenter", functools.partial(self._timed_agent_run, self.documenter))
         workflow.add_node("handle_error", self._handle_error)
 
         # Edges
@@ -131,8 +129,8 @@ class AgentGraph:
 
         workflow.add_conditional_edges(
             "select_task",
-            lambda state: "developer" if state.get("current_task") else "documenter",
-            {"developer": "developer", "documenter": "documenter"}
+            lambda state: "developer" if state.get("current_task") else END,
+            {"developer": "developer", END: END}
         )
 
         workflow.add_edge("developer", "reviewer")
@@ -143,12 +141,11 @@ class AgentGraph:
             {
                 "continue": "select_task",
                 "retry": "developer",
-                "end": "documenter", # Route to documenter when done
+                "end": END,
                 "error": "handle_error"
             }
         )
 
-        workflow.add_edge("documenter", END)
         workflow.add_edge("handle_error", END)
 
         return workflow.compile(checkpointer=self.checkpointer)

@@ -11,6 +11,7 @@ import {
 import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
+import { ModelManager } from './modelManager';
 
 export class AgentCoordinator {
     private architect: SoftwareArchitectAgent;
@@ -20,6 +21,7 @@ export class AgentCoordinator {
     private fileManager: FileManager;
     private terminalManager: TerminalManager;
     private debugManager: DebugManager;
+    private modelManager: ModelManager;
     private outputChannel: vscode.OutputChannel;
     private sessions: Map<string, GraphState> = new Map();
 
@@ -27,24 +29,26 @@ export class AgentCoordinator {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
         this.fileManager = fileManager;
         this.terminalManager = terminalManager;
         this.debugManager = debugManager;
+        this.modelManager = modelManager;
         this.outputChannel = outputChannel;
 
         this.architect = new SoftwareArchitectAgent(
-            fileManager, terminalManager, debugManager, outputChannel
+            fileManager, terminalManager, debugManager, modelManager, outputChannel
         );
         this.developer = new DeveloperAgent(
-            fileManager, terminalManager, debugManager, outputChannel
+            fileManager, terminalManager, debugManager, modelManager, outputChannel
         );
         this.reviewer = new ReviewerAgent(
-            fileManager, terminalManager, debugManager, outputChannel
+            fileManager, terminalManager, debugManager, modelManager, outputChannel
         );
         this.documenter = new DocumenterAgent(
-            fileManager, terminalManager, debugManager, outputChannel
+            fileManager, terminalManager, debugManager, modelManager, outputChannel
         );
     }
 

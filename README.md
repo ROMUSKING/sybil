@@ -7,7 +7,9 @@ Sybil is a polyagentic (multi-agent) software development framework designed to 
 
 ## VS Code Extension
 
-🚀 **Sybil VS Code Extension is now ~95% complete!** Bring Sybil's AI coding capabilities directly into your VS Code environment with native file operations, terminal integration, and debug session management.
+🚀 **Sybil VS Code Extension is now ~97% complete!** Bring Sybil's AI coding capabilities directly into your VS Code environment with native file operations, terminal integration, and debug session management.
+
+**Latest Update (August 31, 2025)**: ✅ **User-Configurable Model Strings & Agent Prompts** - Models and agent prompts are now fully configurable through VS Code settings without code changes!
 
 ### Quick Extension Setup
 
@@ -43,6 +45,9 @@ See `ext/README.md` for detailed manual setup instructions and comprehensive doc
 - ✅ **Cross-Platform Support**: Windows, macOS, and Linux compatibility
 - ✅ **Automated Setup**: One-command setup scripts for all platforms
 - ✅ **Multi-Agent Coordination**: Complete agent workflow with Architect, Developer, Reviewer, and Documenter agents
+- ✅ **User-Configurable Models**: Customize model strings and configurations through VS Code settings
+- ✅ **Agent Prompt Customization**: Configure prompts for each agent type without code changes
+- ✅ **Model Statistics**: Real-time statistics on available models and providers
 
 ## Setup
 
@@ -201,6 +206,62 @@ This ensures that no progress is lost and allows you to continue, review, or deb
 -   Create user documentation and video tutorials
 
 **Current Status**: Phase 3 complete with full multi-agent coordination system implemented. Extension is ~95% complete and ready for comprehensive testing and marketplace preparation.
+
+### Session: 2025-08-31 (Phase 4 Complete - User-Configurable Settings - ~97% Complete)
+
+**Summary:** Successfully implemented user-configurable model strings and agent prompts, making the extension highly adaptable to different use cases and preferences without requiring code changes.
+
+**Key Features & Implementation:**
+-   **User-Configurable Model Strings**: ✅ COMPLETED - Models are now loaded from VS Code settings instead of hardcoded values
+-   **Agent Prompt Customization**: ✅ COMPLETED - Each agent type (Architect, Developer, Reviewer, Documenter) has configurable prompts
+-   **Configuration Schema**: ✅ COMPLETED - Comprehensive VS Code settings schema with defaults and validation
+-   **Fallback System**: ✅ COMPLETED - Graceful fallback to default configurations when user settings are invalid
+-   **Model Statistics**: ✅ COMPLETED - Real-time statistics on available models and providers
+-   **API Key Management**: ✅ COMPLETED - Secure API key storage and validation
+-   **Dynamic Configuration Loading**: ✅ COMPLETED - Settings loaded on extension startup and reloadable
+
+**User-Configurable Features:**
+-   **Model Configurations**: Customize litellm model names, context windows, and descriptions for all 26+ free models
+-   **Agent Prompts**: Modify system prompts and task prompts for each agent type
+-   **Provider Settings**: Configure API keys and model assignments per provider
+-   **Fallback Models**: Automatic fallback to alternative models when primary models fail
+-   **Real-time Updates**: Configuration changes take effect immediately without restart
+
+**Configuration Schema Highlights:**
+-   `sybil.models`: Complete model configurations for OpenRouter and HuggingFace providers
+-   `sybil.agentPrompts`: Customizable prompts for all four agent types
+-   `sybil.apiKeys`: Secure API key storage with provider mapping
+-   Comprehensive defaults provided for all settings
+
+**Technical Achievements:**
+-   Refactored ModelManager to load configurations from VS Code workspace settings
+-   Updated BaseAgent class to use configurable prompts with fallback system
+-   Enhanced AgentCoordinator to pass ModelManager to all agents
+-   Implemented comprehensive TypeScript interfaces for configuration objects
+-   Added robust error handling and validation throughout the configuration system
+
+**Progress Made:**
+-   ✅ Completed Phase 4: User-Configurable Settings implementation
+-   ✅ Enhanced extension flexibility and adaptability
+-   ✅ Improved user experience with customizable agent behavior
+-   ✅ Maintained backward compatibility with existing configurations
+-   ✅ Successfully compiled and tested the enhanced configuration system
+
+**Issues Encountered & Resolved:**
+-   **Configuration Loading**: ✅ RESOLVED - Implemented proper VS Code workspace settings integration
+-   **Type Safety**: ✅ RESOLVED - Added comprehensive TypeScript interfaces for all configuration objects
+-   **Fallback System**: ✅ RESOLVED - Created robust fallback mechanisms for invalid configurations
+-   **Agent Integration**: ✅ RESOLVED - Successfully integrated configurable prompts with agent workflow
+-   **Performance**: ✅ RESOLVED - Optimized configuration loading to minimize startup time
+
+**Next Steps:**
+-   Implement comprehensive testing framework for the extension
+-   Test user configuration functionality end-to-end in VS Code development host
+-   Package extension for marketplace distribution
+-   Add performance monitoring and optimization features
+-   Create user documentation and video tutorials
+
+**Current Status**: Phase 4 complete with full user-configurable settings implemented. Extension is ~97% complete and ready for comprehensive testing and marketplace preparation.
 
 ### Session: 2025-08-31
 

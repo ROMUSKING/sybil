@@ -5,6 +5,7 @@ import { AnalyticsProvider } from './analyticsProvider';
 import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
+import { ModelManager } from './modelManager';
 
 let sybilAgent: SybilAgent;
 let sessionManager: SessionManager;
@@ -12,6 +13,7 @@ let analyticsProvider: AnalyticsProvider;
 let fileManager: FileManager;
 let terminalManager: TerminalManager;
 let debugManager: DebugManager;
+let modelManager: ModelManager;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Sybil AI Coding Agent is now active!');
@@ -22,7 +24,33 @@ export function activate(context: vscode.ExtensionContext) {
     fileManager = new FileManager(context);
     terminalManager = new TerminalManager(context);
     debugManager = new DebugManager(context);
-    sybilAgent = new SybilAgent(context, sessionManager, analyticsProvider, fileManager, terminalManager, debugManager);
+    modelManager = new ModelManager(context);
+    sybilAgent = new SybilAgent(context, sessionManager, analyticsProvider, fileManager, terminalManager, debugManager, modelManager);
+
+    // Helper function to configure API keys
+    async function configureProviderApiKey(providerName: string): Promise<void> {
+        const currentKey = modelManager.getApiKey(providerName);
+        const providerConfig = modelManager.getProviderConfig(providerName);
+
+        const apiKey = await vscode.window.showInputBox({
+            prompt: `Enter API key for ${providerConfig?.name || providerName}`,
+            placeHolder: currentKey ? 'Current key is set' : 'Enter your API key',
+            password: true,
+            value: currentKey || ''
+        });
+
+        if (apiKey !== undefined) {
+            if (apiKey.trim().length === 0) {
+                // Remove the API key
+                await modelManager.setApiKey(providerName, '');
+                vscode.window.showInformationMessage(`API key for ${providerName} has been removed`);
+            } else {
+                // Set the API key
+                await modelManager.setApiKey(providerName, apiKey.trim());
+                vscode.window.showInformationMessage(`API key for ${providerName} has been configured`);
+            }
+        }
+    }
 
     // Register commands
     context.subscriptions.push(
@@ -62,6 +90,54 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('sybil.showAnalytics', () => {
             analyticsProvider.showAnalytics();
+        }),
+
+        vscode.commands.registerCommand('sybil.configureModels', async () => {
+            const providers = modelManager.getProviders();
+            const selectedProvider = await vscode.window.showQuickPick(providers, {
+                placeHolder: 'Select a provider to configure'
+            });
+
+            if (selectedProvider) {
+                await configureProviderApiKey(selectedProvider);
+            }
+        }),
+
+        vscode.commands.registerCommand('sybil.showModelStats', () => {
+            const stats = modelManager.getModelStats();
+            const statsMessage = Object.entries(stats)
+                .map(([provider, data]) => {
+                    const statsData = data as { totalModels: number; freeModels: number };
+                    return `${provider}: ${statsData.freeModels}/${statsData.totalModels} free models`;
+                })
+                .join('\n');
+
+            vscode.window.showInformationMessage(`Model Statistics:\n${statsMessage}`);
+        }),
+
+        vscode.commands.registerCommand('sybil.validateModels', async () => {
+            const freeModels = modelManager.getFreeModels();
+            const validModels: string[] = [];
+            const invalidModels: string[] = [];
+
+            for (const model of freeModels) {
+                const isValid = await modelManager.validateModel(model.name);
+                if (isValid) {
+                    validModels.push(model.name);
+                } else {
+                    invalidModels.push(model.name);
+                }
+            }
+
+            let message = `Validated ${freeModels.length} free models:\n`;
+            message += `✅ Valid: ${validModels.length}\n`;
+            message += `❌ Invalid: ${invalidModels.length}`;
+
+            if (invalidModels.length > 0) {
+                message += `\n\nInvalid models (missing API keys):\n${invalidModels.join(', ')}`;
+            }
+
+            vscode.window.showInformationMessage(message);
         })
     );
 

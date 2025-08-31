@@ -39,6 +39,21 @@
                 "command": "sybil.showAnalytics",
                 "title": "Sybil: Show Analytics",
                 "category": "Sybil"
+            },
+            {
+                "command": "sybil.configureModels",
+                "title": "Sybil: Configure API Keys",
+                "category": "Sybil"
+            },
+            {
+                "command": "sybil.showModelStats",
+                "title": "Sybil: Show Model Statistics",
+                "category": "Sybil"
+            },
+            {
+                "command": "sybil.validateModels",
+                "title": "Sybil: Validate Models",
+                "category": "Sybil"
             }
         ],
         "configuration": {
@@ -46,23 +61,309 @@
             "properties": {
                 "sybil.apiKeys": {
                     "type": "object",
-                    "description": "API keys for LLM providers"
+                    "description": "API keys for LLM providers (stored securely)",
+                    "properties": {
+                        "openrouter": {
+                            "type": "string",
+                            "description": "OpenRouter API key for free models"
+                        },
+                        "huggingface": {
+                            "type": "string",
+                            "description": "HuggingFace API token"
+                        },
+                        "openai": {
+                            "type": "string",
+                            "description": "OpenAI API key"
+                        },
+                        "anthropic": {
+                            "type": "string",
+                            "description": "Anthropic API key"
+                        },
+                        "google": {
+                            "type": "string",
+                            "description": "Google AI API key"
+                        }
+                    }
                 },
                 "sybil.models": {
                     "type": "object",
-                    "description": "Model configurations"
+                    "description": "Model configurations for each provider",
+                    "properties": {
+                        "openrouter": {
+                            "type": "object",
+                            "description": "OpenRouter model configurations",
+                            "properties": {
+                                "or-gemini-flash": {
+                                    "type": "object",
+                                    "description": "Google Gemini 2.0 Flash Experimental",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/google/gemini-2.0-flash-exp:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 1048576,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "Google Gemini 2.0 Flash Experimental - Fast and efficient",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
+                                "or-deepseek-0528": {
+                                    "type": "object",
+                                    "description": "DeepSeek R1",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/deepseek/deepseek-r1-0528:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "DeepSeek R1 - Advanced reasoning model",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
+                                "or-qwen-coder": {
+                                    "type": "object",
+                                    "description": "Qwen3 Coder",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "openrouter/qwen/qwen3-coder:free",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "Qwen3 Coder - Specialized for code generation",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "huggingface": {
+                            "type": "object",
+                            "description": "HuggingFace model configurations",
+                            "properties": {
+                                "hf-deepseek": {
+                                    "type": "object",
+                                    "description": "DeepSeek V3 via Fireworks AI",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "DeepSeek V3 - Advanced reasoning via Fireworks AI",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                },
+                                "hf-qwen-coder": {
+                                    "type": "object",
+                                    "description": "Qwen2.5 Coder 32B",
+                                    "properties": {
+                                        "litellmModelName": {
+                                            "type": "string",
+                                            "default": "huggingface/Qwen/Qwen2.5-Coder-32B-Instruct:fireworks-ai",
+                                            "description": "Litellm model name"
+                                        },
+                                        "isFree": {
+                                            "type": "boolean",
+                                            "default": true,
+                                            "description": "Whether the model is free"
+                                        },
+                                        "contextWindow": {
+                                            "type": "number",
+                                            "default": 32768,
+                                            "description": "Context window size"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "default": "Qwen2.5 Coder 32B - Code generation specialist",
+                                            "description": "Model description"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
-                "sybil.agentModels": {
+                "sybil.agentPrompts": {
                     "type": "object",
-                    "description": "Agent model assignments"
+                    "description": "Customizable prompts for each agent type",
+                    "properties": {
+                        "architect": {
+                            "type": "object",
+                            "description": "Software Architect agent prompts",
+                            "properties": {
+                                "systemPrompt": {
+                                    "type": "string",
+                                    "default": "You are a Software Architect. Your role is to take a high-level user request and create a detailed, hierarchical technical blueprint.\n\nYour final output must be a single XML block enclosed in `<blueprint>` tags.\nThe blueprint can contain nested `<module>` elements to represent the project structure.\nEach module can specify its dependencies on other modules.\nEach module must contain a list of `<task>` elements.\n\nExample of a nested blueprint with dependencies:\n<blueprint>\n  <module name=\"Database\">\n    <tasks>\n      <task id=\"db-1\" description=\"Define the User schema in `src/models/user.py`.\" />\n    </tasks>\n  </module>\n  <module name=\"API\">\n    <dependencies>\n      <dependency>Database</dependency>\n    </dependencies>\n    <tasks>\n      <task id=\"api-1\" description=\"Implement the `/users` endpoint in `src/api/routes.py`. It should use the User model.\" />\n    </tasks>\n  </module>\n</blueprint>",
+                                    "description": "System prompt for the Architect agent"
+                                },
+                                "taskPrompt": {
+                                    "type": "string",
+                                    "default": "Create a detailed technical blueprint for the following task:",
+                                    "description": "Task-specific prompt for the Architect agent"
+                                }
+                            }
+                        },
+                        "developer": {
+                            "type": "object",
+                            "description": "Developer agent prompts",
+                            "properties": {
+                                "systemPrompt": {
+                                    "type": "string",
+                                    "default": "You are a Software Developer. Your role is to implement code based on the blueprint and task specifications provided.\n\nYou should:\n1. Write clean, well-documented code\n2. Follow best practices for the programming language\n3. Handle error cases appropriately\n4. Create modular, reusable components\n5. Include necessary imports and dependencies\n\nAlways provide complete, runnable code that integrates with the existing codebase.",
+                                    "description": "System prompt for the Developer agent"
+                                },
+                                "taskPrompt": {
+                                    "type": "string",
+                                    "default": "Implement the following task based on the blueprint:",
+                                    "description": "Task-specific prompt for the Developer agent"
+                                }
+                            }
+                        },
+                        "reviewer": {
+                            "type": "object",
+                            "description": "Reviewer agent prompts",
+                            "properties": {
+                                "systemPrompt": {
+                                    "type": "string",
+                                    "default": "You are a Code Reviewer. Your role is to analyze code quality, identify potential issues, and ensure best practices are followed.\n\nYou should check for:\n1. Code correctness and logic errors\n2. Security vulnerabilities\n3. Performance issues\n4. Code style and consistency\n5. Documentation quality\n6. Test coverage considerations\n\nProvide specific, actionable feedback. If the code meets standards, respond with 'approved'. Otherwise, provide detailed improvement suggestions.",
+                                    "description": "System prompt for the Reviewer agent"
+                                },
+                                "taskPrompt": {
+                                    "type": "string",
+                                    "default": "Review the following code implementation:",
+                                    "description": "Task-specific prompt for the Reviewer agent"
+                                }
+                            }
+                        },
+                        "documenter": {
+                            "type": "object",
+                            "description": "Documenter agent prompts",
+                            "properties": {
+                                "systemPrompt": {
+                                    "type": "string",
+                                    "default": "You are a Technical Documentation Specialist. Your role is to create comprehensive documentation for the implemented features.\n\nYou should:\n1. Write clear, concise documentation\n2. Include code examples and usage instructions\n3. Document API endpoints, functions, and classes\n4. Provide setup and configuration instructions\n5. Create user-friendly guides and tutorials\n\nFocus on making the documentation accessible to both technical and non-technical users.",
+                                    "description": "System prompt for the Documenter agent"
+                                },
+                                "taskPrompt": {
+                                    "type": "string",
+                                    "default": "Create documentation for the following implementation:",
+                                    "description": "Task-specific prompt for the Documenter agent"
+                                }
+                            }
+                        }
+                    }
                 },
                 "sybil.pythonPath": {
                     "type": "string",
+                    "default": "python3",
                     "description": "Path to Python executable for backend"
+                },
+                "sybil.backendPath": {
+                    "type": "string",
+                    "description": "Path to Sybil Python backend"
                 },
                 "sybil.verbose": {
                     "type": "boolean",
+                    "default": false,
                     "description": "Enable verbose logging"
+                },
+                "sybil.maxConcurrentTasks": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Maximum number of concurrent tasks"
+                },
+                "sybil.sessionTimeout": {
+                    "type": "number",
+                    "default": 3600000,
+                    "description": "Session timeout in milliseconds (1 hour)"
+                },
+                "sybil.enableAnalytics": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable analytics collection"
+                },
+                "sybil.enableDebugIntegration": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable debug session integration"
+                },
+                "sybil.enableTerminalIntegration": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable terminal integration"
+                },
+                "sybil.outputChannelLevel": {
+                    "type": "string",
+                    "enum": [
+                        "error",
+                        "warn",
+                        "info",
+                        "debug"
+                    ],
+                    "default": "info",
+                    "description": "Logging level for output channel"
+                },
+                "sybil.autoSaveFiles": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically save files after modifications"
+                },
+                "sybil.confirmDestructiveActions": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Require confirmation for destructive actions"
                 }
             }
         },

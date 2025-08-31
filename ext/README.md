@@ -1,6 +1,70 @@
 # Sybil VS Code Extension
 
-A powerfu### System Requirements
+A powerfu### System Re- ✅ **User-Configurable Models**: Customize model strings and configurations through VS Code settings
+- ✅ **Agent Prompt Customization**: Config### API Configuration
+Configure API keys through VS Code settings:
+- `sybil.apiKeys`: Object containing API keys for different providers
+- `sybil.models`: Model configurations and fallbacks
+- `sybil.agentPrompts`: Customizable prompts for each agent type
+
+Example:
+```json
+{
+  "sybil.apiKeys": {
+    "openai": "your-openai-api-key",
+    "anthropic": "your-anthropic-api-key"
+  },
+  "sybil.models": {
+    "openrouter": {
+      "or-gemini-flash": {
+        "litellmModelName": "openrouter/google/gemini-2.0-flash-exp:free",
+        "isFree": true,
+    ## Project Status
+
+### Current Progress: ~97% Complete
+- ✅ Core extension infrastructure
+- ✅ VS Code API integrations (File, Terminal, Debug)
+- ✅ Python backend communication
+- ✅ Session management and analytics
+- ✅ Multi-agent coordination system
+- ✅ User-configurable model strings and agent prompts
+- ✅ Test infrastructure
+- 🔄 Comprehensive testing (in progress)
+- ⏳ Marketplace release (pending)
+
+### Recent Updates (August 31, 2025)
+- **User-Configurable Settings**: ✅ COMPLETED - Implemented full configuration system for model strings and agent prompts
+- **Multi-Agent Coordination System**: ✅ COMPLETED - Implemented complete agent workflow with Architect, Developer, Reviewer, and Documenter agents
+- **Test Infrastructure**: ✅ COMPLETED - Added Mocha-based testing framework with VS Code integration
+- **Full VS Code API Integration**: ✅ COMPLETED - Implemented comprehensive file, terminal, and debug managers
+- **TypeScript Compilation**: ✅ COMPLETED - Resolved WSL/Windows environment conflicts
+- **Python Backend**: ✅ COMPLETED - Established subprocess communication layer
+- **Architecture**: ✅ COMPLETED - Completed modular extension architecture: 1048576,
+        "description": "Google Gemini 2.0 Flash Experimental"
+      }
+    },
+    "huggingface": {
+      "hf-deepseek": {
+        "litellmModelName": "huggingface/deepseek-ai/DeepSeek-V3:fireworks-ai",
+        "isFree": true,
+        "contextWindow": 32768,
+        "description": "DeepSeek V3 via Fireworks AI"
+      }
+    }
+  },
+  "sybil.agentPrompts": {
+    "architect": {
+      "systemPrompt": "You are a Software Architect...",
+      "taskPrompt": "Create a detailed technical blueprint..."
+    },
+    "developer": {
+      "systemPrompt": "You are a Software Developer...",
+      "taskPrompt": "Implement the following task..."
+    }
+  }
+}
+```h agent type without code changes
+- ✅ **Model Statistics**: Real-time statistics on available models and providersuirements
 - **Operating System**: Windows 10+, macOS 10.15+, or Linux
 - **RAM**: Minimum 4GB, recommended 8GB+
 - **Disk Space**: 500MB free space for dependencies and build artifacts
@@ -31,8 +95,8 @@ The script will:
 
 If you prefer manual setup or need more control:oding assistant extension for Visual Studio Code that brings the capabilities of the Sybil polyagentic framework directly into your development environment.
 
-**Status**: ~95% Complete (August 31, 2025)
-**Latest**: Full multi-agent coordination system implemented with Architect, Developer, Reviewer, and Documenter agents
+**Status**: ~97% Complete (August 31, 2025)
+**Latest**: ✅ **User-Configurable Model Strings & Agent Prompts** - Full configuration system implemented for customizable models and agent prompts
 
 ## Features
 
@@ -456,10 +520,55 @@ chmod +x node_modules/.bin/vsce
 ```
 
 ### API Configuration
-Configure API keys through VS Code settings:
+Configure API keys and model settings through VS Code settings:
+
+#### Core Settings
 - `sybil.apiKeys`: Object containing API keys for different providers
-- `sybil.models`: Model configurations and fallbacks
+- `sybil.models`: Model configurations and fallback chains
+- `sybil.agentPrompts`: Custom prompt templates for each agent type
 - `sybil.agentModels`: Agent-specific model assignments
+
+#### Model Configuration Examples
+```json
+{
+  "sybil.models": {
+    "primary": "gpt-4",
+    "fallback": ["gpt-3.5-turbo", "claude-3-sonnet"],
+    "customModels": {
+      "my-model": {
+        "provider": "openai",
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.7,
+        "maxTokens": 4096
+      }
+    }
+  }
+}
+```
+
+#### Agent Prompt Configuration
+```json
+{
+  "sybil.agentPrompts": {
+    "architect": "You are an expert software architect...",
+    "developer": "You are a skilled developer...",
+    "reviewer": "You are a code reviewer...",
+    "documenter": "You are a technical writer..."
+  }
+}
+```
+
+#### Agent-Model Mapping
+```json
+{
+  "sybil.agentModels": {
+    "architect": "gpt-4",
+    "developer": "gpt-3.5-turbo",
+    "reviewer": "claude-3-sonnet",
+    "documenter": "my-model"
+  }
+}
+```
 
 ## Architecture
 
@@ -606,6 +715,9 @@ npx vsce publish
 - ✅ **Extension Structure**: Complete and functional
 - ✅ **VS Code API Integration**: All core APIs implemented
 - ✅ **Python Backend Communication**: Basic subprocess communication
+- ✅ **User-Configurable Model Strings**: Full implementation with VS Code settings integration
+- ✅ **User-Configurable Agent Prompts**: Complete prompt template system
+- ✅ **Multi-Agent Coordination**: Complete agent workflow system
 - 🔄 **Testing Framework**: In development
 - ⏳ **Marketplace Packaging**: Pending
 - ⏳ **CI/CD Pipeline**: Not yet implemented
@@ -699,17 +811,20 @@ This extension is part of the Sybil project and follows the same licensing terms
 
 ## Project Status
 
-### Current Progress: ~95% Complete
+### Current Progress: ~97% Complete
 - ✅ Core extension infrastructure
 - ✅ VS Code API integrations (File, Terminal, Debug)
 - ✅ Python backend communication
 - ✅ Session management and analytics
 - ✅ Multi-agent coordination system
+- ✅ User-configurable model strings and agent prompts
 - ✅ Test infrastructure
 - 🔄 Comprehensive testing (in progress)
 - ⏳ Marketplace release (pending)
 
 ### Recent Updates (August 31, 2025)
+- **User-Configurable Model Strings and Agent Prompts**: Complete implementation of customizable model configurations and agent prompt templates
+- **Enhanced Configuration System**: Full VS Code settings integration with JSON schema validation for sybil.models and sybil.agentPrompts
 - **Multi-Agent Coordination System**: Implemented complete agent workflow with Architect, Developer, Reviewer, and Documenter agents
 - **Test Infrastructure**: Added Mocha-based testing framework with VS Code integration
 - **Full VS Code API Integration**: Implemented comprehensive file, terminal, and debug managers
@@ -718,10 +833,11 @@ This extension is part of the Sybil project and follows the same licensing terms
 - **Architecture**: Completed modular extension architecture
 
 ### Roadmap
-1. **Immediate**: Comprehensive testing and validation
-2. **Short-term**: Performance optimization and monitoring
-3. **Medium-term**: Marketplace packaging and distribution
-4. **Long-term**: Advanced features and community contributions
+1. **✅ COMPLETED**: User-configurable model strings and agent prompts implementation
+2. **Immediate**: Comprehensive testing and validation
+3. **Short-term**: Performance optimization and monitoring
+4. **Medium-term**: Marketplace packaging and distribution
+5. **Long-term**: Advanced features and community contributions
 
 For more information about the Sybil framework, visit the main repository.
 

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
+import { ModelManager } from './modelManager';
 
 export interface AgentMessage {
     id: string;
@@ -37,6 +38,7 @@ export abstract class BaseAgent {
     protected fileManager: FileManager;
     protected terminalManager: TerminalManager;
     protected debugManager: DebugManager;
+    protected modelManager: ModelManager;
     protected outputChannel: vscode.OutputChannel;
 
     constructor(
@@ -44,12 +46,14 @@ export abstract class BaseAgent {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
         this.name = name;
         this.fileManager = fileManager;
         this.terminalManager = terminalManager;
         this.debugManager = debugManager;
+        this.modelManager = modelManager;
         this.outputChannel = outputChannel;
     }
 
@@ -63,6 +67,31 @@ export abstract class BaseAgent {
         }
         console.log(logMessage, data);
     }
+
+    protected getSystemPrompt(): string {
+        const agentType = this.name.toLowerCase().replace('agent', '');
+        try {
+            const prompts = this.modelManager.getAgentPrompt(agentType);
+            return prompts.systemPrompt;
+        } catch (error) {
+            this.log(`Failed to get system prompt from configuration, using default: ${error}`);
+            return this.getDefaultSystemPrompt();
+        }
+    }
+
+    protected getTaskPrompt(): string {
+        const agentType = this.name.toLowerCase().replace('agent', '');
+        try {
+            const prompts = this.modelManager.getAgentPrompt(agentType);
+            return prompts.taskPrompt;
+        } catch (error) {
+            this.log(`Failed to get task prompt from configuration, using default: ${error}`);
+            return this.getDefaultTaskPrompt();
+        }
+    }
+
+    protected abstract getDefaultSystemPrompt(): string;
+    protected abstract getDefaultTaskPrompt(): string;
 }
 
 export class SoftwareArchitectAgent extends BaseAgent {
@@ -70,17 +99,19 @@ export class SoftwareArchitectAgent extends BaseAgent {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
-        super('SoftwareArchitectAgent', fileManager, terminalManager, debugManager, outputChannel);
+        super('SoftwareArchitectAgent', fileManager, terminalManager, debugManager, modelManager, outputChannel);
     }
 
     async run(state: GraphState): Promise<Partial<GraphState>> {
         const taskDescription = state.initial_request;
         this.log(`Starting architecture design for: ${taskDescription}`);
 
-        const prompt = this.createSystemPrompt();
-        const fullPrompt = `${prompt}\n\nUser Request: ${taskDescription}`;
+        const systemPrompt = this.getSystemPrompt();
+        const taskPrompt = this.getTaskPrompt();
+        const fullPrompt = `${systemPrompt}\n\n${taskPrompt}\n\nUser Request: ${taskDescription}`;
 
         try {
             // For now, we'll simulate the AI response
@@ -94,7 +125,7 @@ export class SoftwareArchitectAgent extends BaseAgent {
         }
     }
 
-    private createSystemPrompt(): string {
+    protected getDefaultSystemPrompt(): string {
         return `You are a Software Architect. Your role is to take a high-level user request and create a detailed, hierarchical technical blueprint.
 
 Your final output must be a single XML block enclosed in \`<blueprint>\` tags.
@@ -120,6 +151,10 @@ Example of a nested blueprint with dependencies:
 </blueprint>`;
     }
 
+    protected getDefaultTaskPrompt(): string {
+        return "Create a detailed technical blueprint for the following task:";
+    }
+
     private async generateBlueprint(taskDescription: string): Promise<string> {
         // This is a simplified implementation
         // In a real scenario, this would use an AI model to generate the blueprint
@@ -142,9 +177,10 @@ export class DeveloperAgent extends BaseAgent {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
-        super('DeveloperAgent', fileManager, terminalManager, debugManager, outputChannel);
+        super('DeveloperAgent', fileManager, terminalManager, debugManager, modelManager, outputChannel);
     }
 
     async run(state: GraphState): Promise<Partial<GraphState>> {
@@ -168,6 +204,21 @@ export class DeveloperAgent extends BaseAgent {
             this.log(`Error implementing task: ${error}`);
             return { error: `Failed to implement task: ${error}` };
         }
+    }
+
+    protected getDefaultSystemPrompt(): string {
+        return `You are a Software Developer. Your role is to implement code based on the blueprint and task specifications provided.
+
+You should:
+1. Write clean, well-documented code
+2. Follow best practices for the programming language
+3. Handle error cases appropriately
+4. Create modular, reusable components
+5. Include necessary imports and dependencies`;
+    }
+
+    protected getDefaultTaskPrompt(): string {
+        return "Implement the following task based on the blueprint:";
     }
 
     private async implementTask(taskDescription: string, context: string): Promise<string[]> {
@@ -197,9 +248,10 @@ export class ReviewerAgent extends BaseAgent {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
-        super('ReviewerAgent', fileManager, terminalManager, debugManager, outputChannel);
+        super('ReviewerAgent', fileManager, terminalManager, debugManager, modelManager, outputChannel);
     }
 
     async run(state: GraphState): Promise<Partial<GraphState>> {
@@ -220,6 +272,22 @@ export class ReviewerAgent extends BaseAgent {
             this.log(`Error during review: ${error}`);
             return { error: `Failed to review code: ${error}` };
         }
+    }
+
+    protected getDefaultSystemPrompt(): string {
+        return `You are a Code Reviewer. Your role is to analyze code quality, identify potential issues, and ensure best practices are followed.
+
+You should check for:
+1. Code correctness and logic errors
+2. Security vulnerabilities
+3. Performance issues
+4. Code style and consistency
+5. Documentation quality
+6. Test coverage considerations`;
+    }
+
+    protected getDefaultTaskPrompt(): string {
+        return "Review the following code implementation:";
     }
 
     private async reviewCode(task: Task, files: string[]): Promise<string> {
@@ -251,9 +319,10 @@ export class DocumenterAgent extends BaseAgent {
         fileManager: FileManager,
         terminalManager: TerminalManager,
         debugManager: DebugManager,
+        modelManager: ModelManager,
         outputChannel: vscode.OutputChannel
     ) {
-        super('DocumenterAgent', fileManager, terminalManager, debugManager, outputChannel);
+        super('DocumenterAgent', fileManager, terminalManager, debugManager, modelManager, outputChannel);
     }
 
     async run(state: GraphState): Promise<Partial<GraphState>> {
@@ -270,6 +339,21 @@ export class DocumenterAgent extends BaseAgent {
             this.log(`Error generating documentation: ${error}`);
             return { error: `Failed to generate documentation: ${error}` };
         }
+    }
+
+    protected getDefaultSystemPrompt(): string {
+        return `You are a Technical Documentation Specialist. Your role is to create comprehensive documentation for the implemented features.
+
+You should:
+1. Write clear, concise documentation
+2. Include code examples and usage instructions
+3. Document API endpoints, functions, and classes
+4. Provide setup and configuration instructions
+5. Create user-friendly guides and tutorials`;
+    }
+
+    protected getDefaultTaskPrompt(): string {
+        return "Create documentation for the following implementation:";
     }
 
     private async generateDocumentation(taskDescription: string, files: string[]): Promise<void> {

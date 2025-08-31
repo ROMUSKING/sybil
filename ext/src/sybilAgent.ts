@@ -7,6 +7,7 @@ import { AnalyticsProvider } from './analyticsProvider';
 import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
+import { ModelManager } from './modelManager';
 import { AgentCoordinator } from './agentCoordinator';
 
 export class SybilAgent {
@@ -16,6 +17,7 @@ export class SybilAgent {
     private fileManager: FileManager;
     private terminalManager: TerminalManager;
     private debugManager: DebugManager;
+    private modelManager: ModelManager;
     private agentCoordinator: AgentCoordinator;
     private pythonProcess: any;
     private outputChannel: vscode.OutputChannel;
@@ -26,7 +28,8 @@ export class SybilAgent {
         analyticsProvider: AnalyticsProvider,
         fileManager: FileManager,
         terminalManager: TerminalManager,
-        debugManager: DebugManager
+        debugManager: DebugManager,
+        modelManager: ModelManager
     ) {
         this.context = context;
         this.sessionManager = sessionManager;
@@ -34,11 +37,13 @@ export class SybilAgent {
         this.fileManager = fileManager;
         this.terminalManager = terminalManager;
         this.debugManager = debugManager;
+        this.modelManager = modelManager;
         this.outputChannel = vscode.window.createOutputChannel('Sybil Agent');
         this.agentCoordinator = new AgentCoordinator(
             fileManager,
             terminalManager,
             debugManager,
+            modelManager,
             this.outputChannel
         );
         this.context.subscriptions.push(this.outputChannel);
@@ -46,10 +51,51 @@ export class SybilAgent {
 
     public async startTask(task: string): Promise<void> {
         try {
-            const sessionId = await this.sessionManager.createNewSession();
-            await this.executeTask(task, sessionId);
+            this.outputChannel.clear();
+            this.outputChannel.show();
+
+            // Validate input
+            if (!task || task.trim().length === 0) {
+                throw new Error("Task description cannot be empty");
+            }
+
+            if (task.length > 1000) {
+                throw new Error("Task description is too long (max 1000 characters)");
+            }
+
+            // Check if another task is running
+            if (this.isTaskRunning()) {
+                const continueAnyway = await vscode.window.showWarningMessage(
+                    'Another task is currently running. Do you want to start a new task anyway?',
+                    'Yes', 'No'
+                );
+                if (continueAnyway !== 'Yes') {
+                    return;
+                }
+            }
+
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Sybil AI Agent',
+                cancellable: true
+            }, async (progress, token) => {
+                progress.report({ increment: 0, message: 'Initializing task...' });
+
+                const sessionId = await this.sessionManager.createNewSession();
+                progress.report({ increment: 20, message: 'Session created, starting task...' });
+
+                if (token.isCancellationRequested) {
+                    await this.sessionManager.clearCurrentSession();
+                    return;
+                }
+
+                await this.executeTask(task, sessionId, progress, token);
+            });
+
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to start task: ${error}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            this.logError(`Failed to start task: ${errorMessage}`);
+            vscode.window.showErrorMessage(`Sybil: ${errorMessage}`);
         }
     }
 
@@ -67,14 +113,22 @@ export class SybilAgent {
         }
     }
 
-    private async executeTask(task: string, sessionId: string): Promise<void> {
-        this.outputChannel.show();
+    private async executeTask(task: string, sessionId: string, progress?: vscode.Progress<{ message?: string; increment?: number }>, token?: vscode.CancellationToken): Promise<void> {
         this.outputChannel.appendLine(`Starting Sybil task: ${task}`);
         this.outputChannel.appendLine(`Session ID: ${sessionId}`);
 
         try {
+            // Update progress if available
+            progress?.report({ increment: 40, message: 'Analyzing task requirements...' });
+
+            if (token?.isCancellationRequested) {
+                throw new Error('Task was cancelled by user');
+            }
+
             // Use the AgentCoordinator for multi-agent workflow
             const finalState = await this.agentCoordinator.executeTask(task, sessionId);
+
+            progress?.report({ increment: 80, message: 'Finalizing results...' });
 
             if (finalState.error) {
                 this.outputChannel.appendLine(`\nTask failed: ${finalState.error}`);
@@ -86,8 +140,10 @@ export class SybilAgent {
                 vscode.window.showInformationMessage('Sybil task completed successfully!');
             }
         } catch (error) {
-            this.outputChannel.appendLine(`\nError: ${error}`);
-            vscode.window.showErrorMessage(`Sybil task error: ${error}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            this.outputChannel.appendLine(`\nError: ${errorMessage}`);
+            vscode.window.showErrorMessage(`Sybil task error: ${errorMessage}`);
+            throw error; // Re-throw for proper error handling
         }
     }
 
@@ -120,8 +176,19 @@ export class SybilAgent {
         return path.join(__dirname, '..', '..', 'src', 'main.py');
     }
 
-    private getVerboseSetting(): boolean {
-        const config = vscode.workspace.getConfiguration('sybil');
-        return config.get('verbose', false);
+    private isTaskRunning(): boolean {
+        // Check if there's an active session that hasn't completed
+        const currentSessionId = this.sessionManager.getCurrentSessionId();
+        return currentSessionId !== null;
+    }
+
+    private logError(message: string): void {
+        this.outputChannel.appendLine(`[ERROR] ${message}`);
+        console.error(`[SybilAgent] ${message}`);
+    }
+
+    private logInfo(message: string): void {
+        this.outputChannel.appendLine(`[INFO] ${message}`);
+        console.log(`[SybilAgent] ${message}`);
     }
 }

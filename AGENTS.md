@@ -67,6 +67,7 @@ The development of the Sybil project will follow a phased approach, as recommend
         -   **`OrchestratorAgent`**: Traverses the blueprint's dependency graph, orchestrating the workflow between other agents and providing them with the full contextual path (global, module, and task-specific context).
         -   **`DeveloperAgent`**: Executes a single task within the full context of its module and dependencies, following a strict TDD workflow.
         -   **`ReviewerAgent`**: Reviews the developer's work for correctness, style, and adherence to the blueprint, with the ability to approve code or reject it with feedback.
+        -   **`DocumenterAgent`**: Runs at the end of a successful session to automatically update documentation with a summary of the work done.
     -   [x] **Long-Term Memory**: Implemented a persistent memory system using LangGraph's checkpointing feature. Project state is automatically saved at each step, allowing for sessions to be resumed. A file-based checkpointer (`FileCheckpointer`) stores session data in the `.checkpoints/langgraph/` directory.
 
 -   **Phase 5: Hybrid Model Management with LiteLLM (Complete)**
@@ -76,9 +77,9 @@ The development of the Sybil project will follow a phased approach, as recommend
 
 -   **Phase 6: Observability & Performance Optimization (In Progress)**
     -   [x] **Implement Structured Logging**: Replace all `print()` statements with a proper, structured logging framework to capture key events in a machine-readable format.
-    -   [ ] **Integrate Cost Tracking**: Enhance the `UsageTracker` by integrating `litellm.completion_cost()` to store the actual cost of each API call.
+-   [x] **Integrate Cost Tracking**: Enhance the `UsageTracker` by integrating `litellm.completion_cost()` to store the actual cost of each API call.
     -   [ ] **Add Performance Benchmarking**: Add timing mechanisms to the `OrchestratorAgent` to measure the execution time of each agent and task.
-    -   [ ] **Create Analytics Report**: Generate a comprehensive summary report at the end of each run with cost, performance, and usage metrics.
+-   [x] **Create Analytics Report**: Generate a comprehensive summary report at the end of each run with cost, performance, and usage metrics.
 
 ## III. Task Tracker
 
@@ -110,8 +111,8 @@ This section tracks the project's tasks and their status.
 
 #### Phase 6: Observability & Performance
 -   [x] **Implement Structured Logging**: Created a `src/logger.py` module and replaced all `print()` statements throughout the application with structured, configurable logging.
--   [In Progress] **Integrate Cost & Performance Tracking**: Enhance `UsageTracker` with cost data from `litellm` and add timing mechanisms to the `OrchestratorAgent` to benchmark agent performance.
--   [In Progress] **Create Analytics Report**: Add logic to `main.py` to generate and log a final report summarizing the run.
+-   [x] **Integrate Cost & Performance Tracking**: Enhance `UsageTracker` with cost data from `litellm` and add timing mechanisms to the `OrchestratorAgent` to benchmark agent performance.
+-   [x] **Create Analytics Report**: Add logic to `main.py` to generate and log a final report summarizing the run.
 
 #### Provider Integrations
 -   [ ] Research and add hosted provider for Llama.

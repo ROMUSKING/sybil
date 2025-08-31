@@ -18,13 +18,14 @@ def main():
     parser = argparse.ArgumentParser(description="Sybil - A polyagentic software development tool.")
     parser.add_argument("task", type=str, help="The task for the agent to perform.")
     parser.add_argument("--session-id", type=str, help="The session ID to resume a project. If not provided, a new session will be started.")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging to print full requests and responses.")
     args = parser.parse_args()
 
     logger.info("Sybil starting.", extra={"task": args.task, "session_id": args.session_id})
 
     config = load_config()
     usage_tracker = UsageTracker(persistence_file=USAGE_FILE)
-    model_manager = ModelManager(config, usage_tracker)
+    model_manager = ModelManager(config, usage_tracker, verbose=args.verbose)
 
     # The OrchestratorAgent now encapsulates the entire workflow.
     orchestrator = OrchestratorAgent(model_manager, config)

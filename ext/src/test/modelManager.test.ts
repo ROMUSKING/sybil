@@ -1,4 +1,5 @@
 import { strict as assert } from 'assert';
+import { suite, test, suiteSetup } from 'mocha';
 import { ModelManager } from '../../src/modelManager';
 import * as vscode from 'vscode';
 

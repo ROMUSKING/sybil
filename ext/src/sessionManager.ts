@@ -92,7 +92,7 @@ export class SessionManager implements vscode.TreeDataProvider<SessionItem> {
         return element;
     }
 
-    getChildren(element?: SessionItem): Thenable<SessionItem[]> {
+    getChildren(element?: SessionItem): vscode.ProviderResult<SessionItem[]> {
         if (!element) {
             // Root level - return all sessions
             return Promise.resolve(

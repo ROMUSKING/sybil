@@ -6,6 +6,7 @@ import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
 import { ModelManager } from './modelManager';
+import { ChatProvider } from './chatProvider';
 
 let sybilAgent: SybilAgent;
 let sessionManager: SessionManager;
@@ -14,6 +15,8 @@ let fileManager: FileManager;
 let terminalManager: TerminalManager;
 let debugManager: DebugManager;
 let modelManager: ModelManager;
+let chatProvider: ChatProvider;
+let statusBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Sybil AI Coding Agent is now active!');
@@ -26,6 +29,25 @@ export function activate(context: vscode.ExtensionContext) {
     debugManager = new DebugManager(context);
     modelManager = new ModelManager(context);
     sybilAgent = new SybilAgent(context, sessionManager, analyticsProvider, fileManager, terminalManager, debugManager, modelManager);
+    chatProvider = new ChatProvider(context.extensionUri, sybilAgent, modelManager);
+
+    // Register chat provider FIRST
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(ChatProvider.viewType, chatProvider)
+    );
+    console.log('Sybil: Chat provider registered with view type:', ChatProvider.viewType);
+
+    // Register tree data provider for sessions view
+    vscode.window.registerTreeDataProvider('sybilSessions', sessionManager);
+
+    // Create status bar item for quick chat access
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.command = 'sybil.toggleChat';
+    statusBarItem.text = '$(robot)';
+    statusBarItem.tooltip = 'Click to toggle Sybil AI Chat (Ctrl+Shift+S)';
+    statusBarItem.show();
+
+    context.subscriptions.push(statusBarItem);
 
     // Helper function to configure API keys
     async function configureProviderApiKey(providerName: string): Promise<void> {
@@ -138,11 +160,43 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             vscode.window.showInformationMessage(message);
+        }),
+
+        vscode.commands.registerCommand('sybil.openChat', () => {
+            vscode.commands.executeCommand('workbench.view.extension.sybilChatContainer');
+        }),
+
+        vscode.commands.registerCommand('sybil.toggleChat', async () => {
+            // Toggle the chat view in the sidebar
+            await vscode.commands.executeCommand('workbench.view.extension.sybilChatContainer');
         })
     );
 
-    // Register tree data provider for sessions view
-    vscode.window.registerTreeDataProvider('sybilSessions', sessionManager);
+    // Update status bar item when chat visibility changes
+    const updateStatusBarItem = () => {
+        // Check if the Sybil Chat view container is visible
+        const isChatVisible = vscode.window.tabGroups.all
+            .flatMap(tg => tg.tabs)
+            .some(tab => (tab.input as any)?.viewType === 'sybilChat');
+
+        if (isChatVisible) {
+            statusBarItem.text = '$(robot)';
+            statusBarItem.tooltip = 'Sybil AI Chat is open - Click to focus (Ctrl+Shift+S)';
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.activeBackground');
+        } else {
+            statusBarItem.text = '$(robot)';
+            statusBarItem.tooltip = 'Click to open Sybil AI Chat (Ctrl+Shift+S)';
+            statusBarItem.backgroundColor = undefined;
+        }
+    };
+
+    // Listen for tab changes to update status bar
+    context.subscriptions.push(
+        vscode.window.tabGroups.onDidChangeTabs(updateStatusBarItem)
+    );
+
+    // Initial update
+    updateStatusBarItem();
 
     // Register configuration change listener
     context.subscriptions.push(

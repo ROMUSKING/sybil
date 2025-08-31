@@ -20,20 +20,5 @@
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": "warn",
         "no-console": "off"
-    },
-    "overrides": [
-        {
-            "files": [
-                "*.ts"
-            ],
-            "parser": "@typescript-eslint/parser",
-            "plugins": [
-                "@typescript-eslint"
-            ],
-            "extends": [
-                "eslint:recommended",
-                "@typescript-eslint/recommended"
-            ]
-        }
-    ]
+    }
 }

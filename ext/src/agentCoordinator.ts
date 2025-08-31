@@ -12,6 +12,7 @@ import { FileManager } from './fileManager';
 import { TerminalManager } from './terminalManager';
 import { DebugManager } from './debugManager';
 import { ModelManager } from './modelManager';
+// import * as xml2js from 'xml2js';
 
 export class AgentCoordinator {
     private architect: SoftwareArchitectAgent;
@@ -158,7 +159,20 @@ export class AgentCoordinator {
         }
 
         try {
-            const tasks = this.parseBlueprint(state.blueprint_xml);
+            const { graph, tasksMap } = await this.parseBlueprint(state.blueprint_xml);
+            const tasks: Task[] = [];
+
+            for (const moduleName in tasksMap) {
+                if (tasksMap.hasOwnProperty(moduleName)) {
+                    const moduleTasks = tasksMap[moduleName];
+                    tasks.push(...moduleTasks.map((task: any) => ({
+                        description: task.description,
+                        context: task.context,
+                        id: `task_${tasks.length + 1}`
+                    })));
+                }
+            }
+
             this.log(`Parsed ${tasks.length} tasks from blueprint`);
             return tasks;
         } catch (error) {
@@ -166,33 +180,52 @@ export class AgentCoordinator {
         }
     }
 
-    private parseBlueprint(blueprintXml: string): Task[] {
-        // Simple XML parsing for blueprint
-        // In a real implementation, you'd use a proper XML parser
-        const tasks: Task[] = [];
-        const moduleRegex = /<module name="([^"]+)">(.*?)<\/module>/gs;
-        const taskRegex = /<task[^>]*description="([^"]+)"[^>]*\/>/g;
 
-        let moduleMatch;
-        while ((moduleMatch = moduleRegex.exec(blueprintXml)) !== null) {
-            const moduleName = moduleMatch[1];
-            const moduleContent = moduleMatch[2];
-            if (!moduleName || !moduleContent) continue;
+    private async parseBlueprint(blueprintXml: string): Promise<{ graph: any, tasksMap: any }> {
+        // Temporarily disabled - xml2js dependency not available
+        console.log('Blueprint parsing temporarily disabled');
+        return { graph: {}, tasksMap: {} };
 
-            let taskMatch;
-            while ((taskMatch = taskRegex.exec(moduleContent)) !== null) {
-                const description = taskMatch[1];
-                if (!description) continue;
+        /*
+        const parser = new xml2js.Parser({ explicitArray: false });
+        try {
+            const result = await parser.parseStringPromise(blueprintXml);
+            const root = result.root;
+            const graph: { [key: string]: string[] } = {};
+            const tasksMap: { [key: string]: { description: string, context: string }[] } = {};
 
-                tasks.push({
-                    description: description,
-                    context: `Module: ${moduleName}`,
-                    id: `task_${tasks.length + 1}`
-                });
+            if (root && root.module) {
+                const modules = Array.isArray(root.module) ? root.module : [root.module];
+
+                for (const module of modules) {
+                    const name = module.$.name;
+                    if (name) {
+                        if (!graph[name]) {
+                            graph[name] = [];
+                            tasksMap[name] = [];
+                        }
+
+                        if (module.dependencies && module.dependencies.dependency) {
+                            const dependencies = Array.isArray(module.dependencies.dependency) ? module.dependencies.dependency : [module.dependencies.dependency];
+                            graph[name] = dependencies.map((dep: any) => dep);
+                        }
+
+                        if (module.tasks && module.tasks.task) {
+                            const tasks = Array.isArray(module.tasks.task) ? module.tasks.task : [module.tasks.task];
+                            tasksMap[name] = tasks.map((task: any) => ({
+                                description: task.$.description,
+                                context: `Module: ${name}`
+                            }));
+                        }
+                    }
+                }
             }
+            return { graph, tasksMap };
+        } catch (error) {
+            console.error("Error parsing XML:", error);
+            throw error;
         }
-
-        return tasks;
+        */
     }
 
     getSessionState(sessionId: string): GraphState | undefined {
@@ -214,3 +247,4 @@ export class AgentCoordinator {
         console.log(logMessage);
     }
 }
+

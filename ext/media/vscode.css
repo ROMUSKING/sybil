@@ -1,0 +1,88 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* VS Code theme variables */
+:root {
+    --vscode-font-family: var(--vscode-font-family);
+    --vscode-font-size: var(--vscode-font-size);
+    --vscode-editor-font-family: var(--vscode-editor-font-family);
+    --vscode-editor-font-size: var(--vscode-editor-font-size);
+
+    --vscode-foreground: var(--vscode-foreground);
+    --vscode-disabledForeground: var(--vscode-disabledForeground);
+    --vscode-errorForeground: var(--vscode-errorForeground);
+    --vscode-descriptionForeground: var(--vscode-descriptionForeground);
+
+    --vscode-icon-foreground: var(--vscode-icon-foreground);
+    --vscode-focusBorder: var(--vscode-focusBorder);
+    --vscode-textSeparator-foreground: var(--vscode-textSeparator-foreground);
+    --vscode-textLink-foreground: var(--vscode-textLink-foreground);
+    --vscode-textLink-activeForeground: var(--vscode-textLink-activeForeground);
+    --vscode-textPreformat-foreground: var(--vscode-textPreformat-foreground);
+    --vscode-textBlockQuote-background: var(--vscode-textBlockQuote-background);
+    --vscode-textBlockQuote-border: var(--vscode-textBlockQuote-border);
+    --vscode-textCodeBlock-background: var(--vscode-textCodeBlock-background);
+    --vscode-textSeparator-foreground: var(--vscode-textSeparator-foreground);
+
+    --vscode-button-background: var(--vscode-button-background);
+    --vscode-button-foreground: var(--vscode-button-foreground);
+    --vscode-button-hoverBackground: var(--vscode-button-hoverBackground);
+    --vscode-button-secondaryBackground: var(--vscode-button-secondaryBackground);
+    --vscode-button-secondaryForeground: var(--vscode-button-secondaryForeground);
+    --vscode-button-secondaryHoverBackground: var(--vscode-button-secondaryHoverBackground);
+
+    --vscode-badge-background: var(--vscode-badge-background);
+    --vscode-badge-foreground: var(--vscode-badge-foreground);
+
+    --vscode-scrollbar-shadow: var(--vscode-scrollbar-shadow);
+    --vscode-scrollbarSlider-activeBackground: var(--vscode-scrollbarSlider-activeBackground);
+    --vscode-scrollbarSlider-background: var(--vscode-scrollbarSlider-background);
+    --vscode-scrollbarSlider-hoverBackground: var(--vscode-scrollbarSlider-hoverBackground);
+
+    --vscode-list-errorForeground: var(--vscode-list-errorForeground);
+    --vscode-list-warningForeground: var(--vscode-list-warningForeground);
+    --vscode-list-focusBackground: var(--vscode-list-focusBackground);
+    --vscode-list-focusForeground: var(--vscode-list-focusForeground);
+    --vscode-list-activeSelectionBackground: var(--vscode-list-activeSelectionBackground);
+    --vscode-list-activeSelectionForeground: var(--vscode-list-activeSelectionForeground);
+    --vscode-list-inactiveSelectionBackground: var(--vscode-list-inactiveSelectionBackground);
+    --vscode-list-inactiveSelectionForeground: var(--vscode-list-inactiveSelectionForeground);
+    --vscode-list-hoverBackground: var(--vscode-list-hoverBackground);
+    --vscode-list-hoverForeground: var(--vscode-list-hoverForeground);
+    --vscode-list-dropBackground: var(--vscode-list-dropBackground);
+
+    --vscode-input-background: var(--vscode-input-background);
+    --vscode-input-foreground: var(--vscode-input-foreground);
+    --vscode-inputOption-activeBackground: var(--vscode-inputOption-activeBackground);
+    --vscode-inputOption-activeForeground: var(--vscode-inputOption-activeForeground);
+    --vscode-inputOption-activeBorder: var(--vscode-inputOption-activeBorder);
+    --vscode-input-placeholderForeground: var(--vscode-input-placeholderForeground);
+
+    --vscode-menu-background: var(--vscode-menu-background);
+    --vscode-menu-foreground: var(--vscode-menu-foreground);
+    --vscode-menu-selectionBackground: var(--vscode-menu-selectionBackground);
+    --vscode-menu-selectionForeground: var(--vscode-menu-selectionForeground);
+    --vscode-menu-separatorBackground: var(--vscode-menu-separatorBackground);
+
+    --vscode-editor-background: var(--vscode-editor-background);
+    --vscode-editor-foreground: var(--vscode-editor-foreground);
+    --vscode-editorWidget-background: var(--vscode-editorWidget-background);
+    --vscode-editorWidget-border: var(--vscode-editorWidget-border);
+    --vscode-editorWidget-resizeBorder: var(--vscode-editorWidget-resizeBorder);
+
+    --vscode-quickInput-background: var(--vscode-quickInput-background);
+    --vscode-quickInput-foreground: var(--vscode-quickInput-foreground);
+    --vscode-quickInputTitle-background: var(--vscode-quickInputTitle-background);
+
+    --vscode-widget-shadow: var(--vscode-widget-shadow);
+
+    --vscode-notificationsInfoIcon-foreground: var(--vscode-notificationsInfoIcon-foreground);
+    --vscode-notificationsWarningIcon-foreground: var(--vscode-notificationsWarningIcon-foreground);
+    --vscode-notificationsErrorIcon-foreground: var(--vscode-notificationsErrorIcon-foreground);
+
+    --vscode-extensionButton-prominentBackground: var(--vscode-extensionButton-prominentBackground);
+    --vscode-extensionButton-prominentForeground: var(--vscode-extensionButton-prominentForeground);
+    --vscode-extensionButton-prominentHoverBackground: var(--vscode-extensionButton-prominentHoverBackground);
+}

@@ -174,7 +174,7 @@ export class TerminalManager {
      * Dispose of all terminals
      */
     public disposeAllTerminals(): void {
-        for (const [name, terminal] of this.terminals) {
+        for (const terminal of this.terminals.values()) {
             terminal.dispose();
         }
         this.terminals.clear();
